@@ -1,0 +1,290 @@
+import java.io.*;
+import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+
+public class DataBaseHandler {
+
+	/**
+	 * Reads the file that has been provided to the program. Information is stored
+	 * in a 2D array that represents the floor Static ensures that only one file can
+	 * be read.
+	 * 
+	 * @param fileName - The name of the file to read from
+	 * @return - The 2D array with the floor information
+	 */
+	
+	//Database Handler accesses files on behalf of the program, reading, formatting and writing the information as needed.
+	//Original intention was to use a database, but SQL will not work on my PC
+	
+	public static ArrayList<StockItem> retrieveMenu() {
+		try {
+			// create file reading objects
+			ArrayList<StockItem> menu = new ArrayList<>();
+			FileReader reader = new FileReader("Inventory.txt");
+			BufferedReader theFile = new BufferedReader(reader);
+			String stringLine = "";
+			theFile.readLine();
+			while ((stringLine = theFile.readLine()) != null) {
+				String[] lineSplit = stringLine.split(",");
+				String miname = lineSplit[1].replaceAll("\"", "");
+				float price = Float.parseFloat(lineSplit[3].replaceAll("[\\$]", ""));
+				String menuID = lineSplit[0];
+				int quantity = Integer.parseInt(lineSplit[2]);
+				String category = lineSplit[4];
+				Boolean obsolete = Boolean.parseBoolean(lineSplit[5]);
+				StockItem StockItem = new StockItem(miname, price, menuID, quantity, category, obsolete);
+				menu.add(StockItem);
+			}
+
+			// Close the resource, and return the array
+			theFile.close();
+			return menu;
+		} catch (FileNotFoundException ex) {
+			// The file didn't exist, show an error
+			System.out.println("Error: Menu File not found.");
+			System.out.println("Please check the path to the file.");
+			System.exit(1);
+		} catch (IOException ex) {
+			// There was an IO error, show and error message
+			System.out.println("Error in reading file. Try closing it and programs that may be accessing it.");
+			System.out.println("If you're accessing this file over a network, try making a local copy.");
+			System.exit(1);
+		}
+
+		return null;
+	}
+	
+	//Sales of each item
+	public static Map<String, Integer> getSalesTable() {
+		ArrayList<Sale> allSales = retrieveSales();
+		Map<String, Integer> counts = new HashMap<String, Integer>();
+
+		for (int i=0; i<allSales.size();i++) {
+			if (counts.containsKey(allSales.get(i).getMIDName())) {
+				counts.put(allSales.get(i).getMIDName(), counts.get(allSales.get(i).getMIDName()) + 1);
+			} else {
+				counts.put(allSales.get(i).getMIDName(), 1);
+			}
+		}
+		return counts;
+	}
+	
+	//each seperate sale ID and time
+	public static String[][] getSaleIDTime() {
+		ArrayList<Sale> allSales = retrieveSales();
+		Map<String, LocalDateTime> uniqueSales = new HashMap<String, LocalDateTime>();
+		
+		for (int i=0; i<allSales.size();i++) {
+			if (!uniqueSales.containsKey(allSales.get(i).getSaleID()))
+			{
+				uniqueSales.put(allSales.get(i).getSaleID(), allSales.get(i).getDaySold());
+			} 
+		}
+		
+		String[][] exportSales = new String[uniqueSales.size()][2];
+		
+		Set sales = uniqueSales.entrySet();		
+		Iterator salesIterator = sales.iterator();
+		
+		
+		for (int k=0; k<uniqueSales.size();k++) {
+			Map.Entry mapping = (Map.Entry) salesIterator.next();
+			exportSales[k][0]= mapping.getKey().toString();
+			exportSales[k][1]= mapping.getValue().toString();
+		}
+		return exportSales;
+	}
+	//"Item", "Count", "Price", "Stock", "Category"
+	
+	public static String[][] getPastOrder(String orderID) {
+		try {
+			// create file reading objects
+			Map<String, Integer> barcodeCounts = new HashMap<String, Integer>();
+			//"Item", "Count", "Price", "Stock", "Category"
+			ArrayList<StockItem> stock = retrieveMenu();
+			FileReader reader = new FileReader("Sales.txt");
+			BufferedReader theFile = new BufferedReader(reader);
+			String stringLine = "";
+			theFile.readLine();
+			while ((stringLine = theFile.readLine()) != null) {
+				String[] lineSplit = stringLine.split(",");
+				String saleid = lineSplit[2].replaceAll("\"", "");
+				if (saleid.contentEquals(orderID))
+				{
+					System.out.println(stringLine);
+					if(!barcodeCounts.containsKey(lineSplit[0]))
+					{
+						barcodeCounts.put(lineSplit[0], 1);
+					}
+					else
+					{
+						int old = barcodeCounts.get(lineSplit[0]);
+						barcodeCounts.replace(lineSplit[0], old+1);
+					}
+
+				}
+				
+			}
+			
+			String[][] orderDetails = new String[barcodeCounts.size()][5];
+			
+			for (int i=0;i<stock.size();i++)
+			{
+				if (barcodeCounts.containsKey(stock.get(i).getbc()))
+				{
+					orderDetails[i][0] = stock.get(i).getbc();
+					orderDetails[i][1] = barcodeCounts.get(stock.get(i).getbc()).toString();
+					orderDetails[i][2] = "$" + Float.toString(stock.get(i).getPrice() * barcodeCounts.get(stock.get(i).getbc()))+ " ("
+							+ Float.toString(barcodeCounts.get(stock.get(i).getbc())) + " x $" + barcodeCounts.get(stock.get(i).getbc()).toString() + ")";
+					orderDetails[i][3] = Integer.toString(stock.get(i).getQuantity());
+					orderDetails[i][4] = stock.get(i).getCategory();
+				}
+
+			}
+			
+			// Close the resource, and return the array
+			theFile.close();
+			
+			return orderDetails;
+		} catch (FileNotFoundException ex) {
+			// The file didn't exist, show an error
+			System.out.println("Error: Menu File not found.");
+			System.out.println("Please check the path to the file.");
+			System.exit(1);
+		} catch (IOException ex) {
+			// There was an IO error, show and error message
+			System.out.println("Error in reading file. Try closing it and programs that may be accessing it.");
+			System.out.println("If you're accessing this file over a network, try making a local copy.");
+			System.exit(1);
+		}
+
+		return null;
+	}
+	
+	public static ArrayList<Sale> retrieveSales() {
+		try {
+			// create file reading objects
+			ArrayList<Sale> theSales = new ArrayList<>();
+			FileReader reader = new FileReader("Sales.txt");
+			BufferedReader theFile = new BufferedReader(reader);
+			String stringLine = "";
+			theFile.readLine();
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+			while ((stringLine = theFile.readLine()) != null) {
+				String[] lineSplit = stringLine.split(",");
+				String menuID = lineSplit[0];
+				String miname = lineSplit[1].replaceAll("\"", "");
+				String saleid = lineSplit[2].replaceAll("\"", "");
+				int itmsaleid = Integer.parseInt(lineSplit[3].replaceAll("\"", ""));
+				LocalDateTime daysold = LocalDateTime.parse(lineSplit[4], formatter);
+				Sale newSale = new Sale(menuID, miname, saleid, itmsaleid, daysold);
+				theSales.add(newSale);
+			}
+
+			// Close the resource, and return the array
+			theFile.close();
+			return theSales;
+		} catch (FileNotFoundException ex) {
+			// The file didn't exist, show an error
+			System.out.println("Error: Menu File not found.");
+			System.out.println("Please check the path to the file.");
+			System.exit(1);
+		} catch (IOException ex) {
+			// There was an IO error, show and error message
+			System.out.println("Error in reading file. Try closing it and programs that may be accessing it.");
+			System.out.println("If you're accessing this file over a network, try making a local copy.");
+			System.exit(1);
+		}
+
+		return null;
+	}
+
+	public static void exportSales(ArrayList<Sale> theSales) {
+		try {
+			// create file reading objects
+			FileWriter fw = new FileWriter("Sales.txt");
+			BufferedWriter theFile = new BufferedWriter(fw);
+
+			// DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy
+			// HH:mm:ss");
+			// LocalDateTime daysold = LocalDateTime.parse(lineSplit[4], formatter);
+
+			theFile.write("\"MenuId\",\"MIName\",\"SaleID\",\"itemSaleID\",\"daySold\"\n");
+			for (int i = 0; i < theSales.size(); i++) {
+				Sale curSale = theSales.get(i);
+				String finalCheck = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").format(curSale.getDaySold());
+				String stringLine = curSale.getMenuID() + "," + "\"" + curSale.getMIDName() + "\"" + "," + "\""
+						+ curSale.getSaleID() + "\"" + "," + curSale.getItemSaleID() + "," + finalCheck + "\n";
+				theFile.write(stringLine);
+			}
+
+			// Close the resource, and return the array
+			theFile.close();
+		} catch (FileNotFoundException ex) {
+			// The file didn't exist, show an error
+			System.out.println("Error: Menu File not found.");
+			System.out.println("Please check the path to the file.");
+			System.exit(1);
+		} catch (IOException ex) {
+			// There was an IO error, show and error message
+			System.out.println("Error in reading file. Try closing it and programs that may be accessing it.");
+			System.out.println("If you're accessing this file over a network, try making a local copy.");
+			System.exit(1);
+		}
+	}
+	
+	public static void updateStock(String[][] table) {
+		ArrayList<StockItem> oldStock = retrieveMenu();
+		for (int j=0;j<oldStock.size();j++)
+		{
+			for (int i=0;i<table.length-1;i++)
+			{
+				if (Integer.valueOf(table[i][5])==Integer.valueOf(oldStock.get(j).getbc()))
+				{
+					oldStock.get(j).reduceQuantity(Integer.parseInt(table[i][1]));
+					System.out.println(oldStock.get(j).getName());
+					System.out.println(oldStock.get(j).getQuantity());
+				}				
+			}
+		}
+		
+		try {
+			// create file reading objects
+			FileWriter fw = new FileWriter("Inventory.txt");
+			BufferedWriter theFile = new BufferedWriter(fw);
+
+			theFile.write("\"Barcode\",\"Description\",\"Quantity\",\"Price\",\"Category\",\"Obsolete\"\n");
+			for (int j=0;j<oldStock.size();j++)
+			{
+				float thePriceF = oldStock.get(j).getPrice();
+				String outputLine = oldStock.get(j).getbc() +",\"" + 
+						oldStock.get(j).getName() +",\""+
+						oldStock.get(j).getQuantity() +",\""+
+						"$"+String.format("%.2f", thePriceF) +",\""+
+						oldStock.get(j).getCategory() +",\""+
+						Boolean.toString(oldStock.get(j).getObsolete())+"\"\n";
+				theFile.write(outputLine);
+			}
+								
+			// Close the resource, and return the array
+			theFile.close();
+		} catch (FileNotFoundException ex) {
+			// The file didn't exist, show an error
+			System.out.println("Error: Menu File not found.");
+			System.out.println("Please check the path to the file.");
+			System.exit(1);
+		} catch (IOException ex) {
+			// There was an IO error, show and error message
+			System.out.println("Error in reading file. Try closing it and programs that may be accessing it.");
+			System.out.println("If you're accessing this file over a network, try making a local copy.");
+			System.exit(1);
+		}
+	}
+
+
+	
+	
+}
