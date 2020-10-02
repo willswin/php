@@ -1,9 +1,12 @@
+package gui;
 import java.io.*;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import inventory.Inventory;
 
 public class DataBaseHandler {
 
@@ -18,7 +21,7 @@ public class DataBaseHandler {
 	
 	//Database Handler accesses files on behalf of the program, reading, formatting and writing the information as needed.
 	//Original intention was to use a database, but SQL will not work on my PC
-	
+	// Creates a new instance of Inventory.inventory to enact changes, this instance closes after use to prevent memory leaks -JH
 	public static ArrayList<StockItem> retrieveMenu() {
 		try {
 			// create file reading objects
@@ -27,7 +30,7 @@ public class DataBaseHandler {
 			BufferedReader theFile = new BufferedReader(reader);
 			String stringLine = "";
 			theFile.readLine();
-			while ((stringLine = theFile.readLine()) != null) {
+			/*while ((stringLine = theFile.readLine()) != null) {
 				String[] lineSplit = stringLine.split(",");
 				String miname = lineSplit[1].replaceAll("\"", "");
 				float price = Float.parseFloat(lineSplit[3].replaceAll("[\\$]", ""));
@@ -38,7 +41,20 @@ public class DataBaseHandler {
 				StockItem StockItem = new StockItem(miname, price, menuID, quantity, category, obsolete);
 				menu.add(StockItem);
 			}
-
+*/			
+			 
+		
+			try {
+				
+				Inventory phpStock = new Inventory();		// New Instance of java Connection		
+				phpStock.ReadDB(menu); // Updates menu obj with current Database Information
+				
+				
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}  
+			
 			// Close the resource, and return the array
 			theFile.close();
 			return menu;
@@ -202,11 +218,11 @@ public class DataBaseHandler {
 
 		return null;
 	}
-
+	// Is this to output CSV? - JH
 	public static void exportSales(ArrayList<Sale> theSales) {
 		try {
 			// create file reading objects
-			FileWriter fw = new FileWriter("Sales.txt");
+			FileWriter fw = new FileWriter("Sales.csv");
 			BufferedWriter theFile = new BufferedWriter(fw);
 
 			// DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy
@@ -236,9 +252,11 @@ public class DataBaseHandler {
 			System.exit(1);
 		}
 	}
-	
+	//Implemented - JH
 	public static void updateStock(String[][] table) {
 		ArrayList<StockItem> oldStock = retrieveMenu();
+		Inventory phpStock = new Inventory();		// New Instance of java Connection		
+		
 		for (int j=0;j<oldStock.size();j++)
 		{
 			for (int i=0;i<table.length-1;i++)
@@ -246,8 +264,17 @@ public class DataBaseHandler {
 				if (Integer.valueOf(table[i][5])==Integer.valueOf(oldStock.get(j).getbc()))
 				{
 					oldStock.get(j).reduceQuantity(Integer.parseInt(table[i][1]));
+					try {
+						// are you attempting to decrement the item quantity multiple times? item barcode being j? -JH
+						//phpStock.EditItemMinusOne(Integer.parseInt(oldStock.get(j).getbc()));
+						phpStock.EditItemMinusAmt(Integer.parseInt(oldStock.get(j).getbc()), Integer.parseInt(table[i][1]));
+					} catch (SQLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 					System.out.println(oldStock.get(j).getName());
 					System.out.println(oldStock.get(j).getQuantity());
+					//TESTING//System.out.println(" The current i value is:" +Integer.parseInt(table[i][1]));
 				}				
 			}
 		}
