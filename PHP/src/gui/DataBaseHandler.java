@@ -73,6 +73,29 @@ public class DataBaseHandler {
 		return null;
 	}
 	
+	
+	//get 2d array of all inventory items
+	public static String[][] getInventoryTable() {
+		ArrayList<StockItem> allInventory = retrieveMenu();
+		
+		Collections.sort(allInventory, new invNameComp());
+		
+		String[][] allInvTable = new String[allInventory.size()][7];
+		
+		//"Barcode","Description","Quantity","Price","Category","Obsolete"
+		for (int i=0; i<allInventory.size();i++) {
+			allInvTable[i][0] = allInventory.get(i).barcode;
+			allInvTable[i][1] = allInventory.get(i).name;
+			allInvTable[i][2] = Integer.toString(allInventory.get(i).quantity);
+			allInvTable[i][3] = Float.toString(allInventory.get(i).price);
+			allInvTable[i][4] = allInventory.get(i).category;
+			allInvTable[i][5] = Boolean.toString(allInventory.get(i).obsolete);
+			allInvTable[i][6] = Integer.toString(allInventory.get(i).minStock);
+		}
+		return allInvTable;
+	}
+	
+	
 	//Sales of each item
 	public static Map<String, Integer> getSalesTable() {
 		ArrayList<Sale> allSales = retrieveSales();
@@ -312,7 +335,54 @@ public class DataBaseHandler {
 		}
 	}
 
+	public static void addStock(String name, float price, int quantity, String category, Boolean obsolete, int Minimum) {
+		Inventory phpStock = new Inventory();		// New Instance of java Connection		
+		int val = (obsolete) ? 1 : 0;
+		try {
+			// adding a new line
+			phpStock.Add(name, quantity, price, category, val, Minimum);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static void deleteStock(int code) {
+		Inventory phpStock = new Inventory();		// New Instance of java Connection		
+		// adding a new line
+		try {
+			phpStock.Delete(code);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static void editStockItem(int code, String name, float price, int quantity, String category, Boolean obsolete, int Minimum) {
+		Inventory phpStock = new Inventory();		// New Instance of java Connection		
+		int val = (obsolete) ? 1 : 0;
+		try {
+			// adding a new line
+			phpStock.EditName(code, name);
+			phpStock.EditPrice(code, price);
+			phpStock.EditQuantity(code, quantity);
+			phpStock.EditCategory(code, category);
+			phpStock.EditObsolescence(code, val);
+			phpStock.EditMinimum(code, Minimum);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
+}
 
-	
-	
+class invNameComp implements Comparator<StockItem> {
+    public int compare(StockItem item1, StockItem item2) {
+        return item1.getName().compareTo(item2.name);
+    }
 }

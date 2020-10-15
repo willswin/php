@@ -25,15 +25,15 @@ import dataBaseAccess.Login;
  */
 public class Inventory
 {
-	//public static String USRN = "phpadmin";
-	//public static String USRP = "phpadminpw";
-	public static String Database = "Dp2pharm"; 
+	public static String USRN = "will";
+	public static String USRP = "willpass";
+	public static String Database = "dp2pharm"; 
 	 protected Connection connect = null;
 	 protected Statement statement = null;
 	 protected PreparedStatement preparedStatement = null;
 	 protected ResultSet resultSet = null;
-	// public String Login = "phpadmin"; // will be removed after GUI implemented
-	// public String Pass = "phpadminpw"; // set externally by GUI login process global Var
+	 //public String Login = "will"; // will be removed after GUI implemented
+	 //public String Pass = "willpass"; // set externally by GUI login process global Var
 	 // default values if they are not passed along. 
 	 protected int amount = 0;
 	 protected int bar = 0;
@@ -182,6 +182,20 @@ public class Inventory
 		// Statements allow SQL queries to the database
 		statement = connect.createStatement();
 		String sql = "UPDATE inventory  SET item_quantity = ('" + Amount + "')  WHERE item_barcode = ('"+ Barcode +"')";
+		statement.executeUpdate(sql);
+		} 
+    catch (Exception e) { throw e; }    
+    finally { close();  }
+	}
+	
+	public void EditMinimum(int Barcode, int Amount) throws SQLException
+	{	/// Adds an Item to inventory Specifying all values///
+	try {
+		// Setup the connection with the DB//
+		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?", Login.USRN, Login.USRP);
+		// Statements allow SQL queries to the database
+		statement = connect.createStatement();
+		String sql = "UPDATE inventory  SET minimum_stock = ('" + Amount + "')  WHERE item_barcode = ('"+ Barcode +"')";
 		statement.executeUpdate(sql);
 		} 
     catch (Exception e) { throw e; }    
@@ -409,13 +423,14 @@ public class Inventory
 	            double ItemPrice = resultSet.getDouble("item_price");
 	            String ItemCategory = resultSet.getString("item_category");
 	            int ItemObsolete = resultSet.getInt("item_obsolete");
+	            int ItemMinimum = resultSet.getInt("minimum_stock");
 	            if(ItemObsolete == 1)
 	            {
 	            Discontinued = true;
 	            }
 	            else {}
 	            String menuID = Integer.toString(ItemKey);
-	            StockItem StockItem = new StockItem(ItemName, (float) ItemPrice, menuID, ItemQuantity, ItemCategory, Discontinued);
+	            StockItem StockItem = new StockItem(ItemName, (float) ItemPrice, menuID, ItemQuantity, ItemCategory, Discontinued, ItemMinimum);
 				menu2.add(StockItem);
 	            
 	           // String summary = resultSet.getString("summary");

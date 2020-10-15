@@ -4,8 +4,8 @@ public class Login
 {
 	// Global Constants for UserName, Password and Database Name
 	
-	public static String USRN = "phpadmin";
-	public static String USRP = "phpadminpw";
+	public static String USRN = "root";
+	public static String USRP = "raiserheavy34";
 	public static String Database = "dp2pharm"; 
 	
 	public static void updateCredentials(String UserName, String UserPw)
