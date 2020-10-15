@@ -241,39 +241,39 @@ public class DataBaseHandler {
 
 		return null;
 	}
-	// Is this to output CSV? - JH
-	public static void exportSales(ArrayList<Sale> theSales) {
-		try {
-			// create file reading objects
-			FileWriter fw = new FileWriter("Sales.csv");
-			BufferedWriter theFile = new BufferedWriter(fw);
-
-			// DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy
-			// HH:mm:ss");
-			// LocalDateTime daysold = LocalDateTime.parse(lineSplit[4], formatter);
-
-			theFile.write("\"MenuId\",\"MIName\",\"SaleID\",\"itemSaleID\",\"daySold\"\n");
-			for (int i = 0; i < theSales.size(); i++) {
-				Sale curSale = theSales.get(i);
-				String finalCheck = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").format(curSale.getDaySold());
-				String stringLine = curSale.getMenuID() + "," + "\"" + curSale.getMIDName() + "\"" + "," + "\""
-						+ curSale.getSaleID() + "\"" + "," + curSale.getItemSaleID() + "," + finalCheck + "\n";
-				theFile.write(stringLine);
+	
+	public static void exportSales(ArrayList<Sale> theSales) 
+	{
+		SalesDB ThisSale = new SalesDB();
+		String Staff_notes = "";
+		int check = 0; // Sale record product flag.
+		for(int i = 0; i < theSales.size(); i++)
+			{
+			Sale curSale = theSales.get(i);
+					
+			String finalCheck = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").format(curSale.getDaySold());
+			try {
+				ThisSale.AddSaleItem(curSale.getSaleID(), Integer.parseInt(curSale.getMenuID()), curSale.getItemSaleID(), curSale.getItemSalePrice());
+			    } 
+			catch (Exception e) 
+			{			
+			e.printStackTrace();
 			}
-
-			// Close the resource, and return the array
-			theFile.close();
-		} catch (FileNotFoundException ex) {
-			// The file didn't exist, show an error
-			System.out.println("Error: Menu File not found.");
-			System.out.println("Please check the path to the file.");
-			System.exit(1);
-		} catch (IOException ex) {
-			// There was an IO error, show and error message
-			System.out.println("Error in reading file. Try closing it and programs that may be accessing it.");
-			System.out.println("If you're accessing this file over a network, try making a local copy.");
-			System.exit(1);
+					
+			if(check == 0)
+			{
+			try {
+				ThisSale.AddSaleRec(curSale.getSaleID(), Login.USRN, curSale.getDaySold(), Staff_notes);
+				check = 1; // disables second record being written.
+				}
+				catch (Exception e)
+				{						
+					e.printStackTrace();
+				}
+			}
+					
 		}
+		
 	}
 	//Implemented - JH
 	public static void updateStock(String[][] table) {
