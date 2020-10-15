@@ -4,6 +4,8 @@ package gui;
  *Based on Tabbed Pane Demo by Oracle
 Copyright (c) 1995, 2008, Oracle and/or its affiliates. All rights reserved.*/
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -11,22 +13,20 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+
+import java.text.NumberFormat;
+
 import java.awt.GridLayout;
 public class PHP extends JPanel {
 	private Map<String, Order> allOrders;
 	private static JFrame frame;
 	private static OrderHandler OH;
 	ListSelectionModel listSelectionModel;
+	ListSelectionModel invSelectModel;
 	JTable output;
 	
 	static String[][] itemsInOrder = {{"#", "#", "#", "#", "#"}};
@@ -41,11 +41,16 @@ public class PHP extends JPanel {
 	private int revOrder = 0;
 	private int reviewSize = 0;
 	
+	private int invOrder = 0;
+	private int invSize = 0;
+	
 	private static String currentOrderID = "default";
+	private static String inventoryID = "default";
 	private static String reviewOrderID = "default";
 	
 	private String[][] salesList = DataBaseHandler.getSaleIDTime();
-
+	String[][] invTable = DataBaseHandler.getInventoryTable();
+	
 	public PHP() {
 		super(new BorderLayout());
 
@@ -277,27 +282,234 @@ public class PHP extends JPanel {
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		
 
-		//Panel 3, the Chart. Based on the counts of each sold item
+		//Panel 2
 		
 		//setting up the chart's panel
-		JComponent Statistics = makeTextPanel("Statistics Handler");
-		tabbedPane.addTab("Statistics", null, Statistics, "Graph of total Sales");
-		Statistics.setPreferredSize(new Dimension(1200, 800));
-		Map<String, Integer> theSales = DataBaseHandler.getSalesTable();
-		BarChart chart = new BarChart();
-		JPanel bottom = new JPanel();
-		int widthcount = 0;
-		for (String key : theSales.keySet()) {
-			chart.addBar(new Color((int)(Math.random() * 0x1000000)), theSales.get(key));
-			JTextField text = new JTextField(key + " "+ theSales.get(key));
-			widthcount++;
-			text.setPreferredSize(new Dimension(1200/theSales.size(), 100));
-			text.setEditable(false);
-			bottom.add(text);
-		}
-		Statistics.add(chart);
-		Statistics.add(bottom);
+		JComponent inventoryPane = makeTextPanel("Inventory Manager");
+		tabbedPane.addTab("Inventory Manager", null, inventoryPane, "Manage Stock");
+		inventoryPane.setPreferredSize(new Dimension(1200, 800));
 		
+		JPanel invView = new JPanel();
+		invView.setLayout(new GridLayout(1, 2, 20, 20));
+		invView.setPreferredSize(new Dimension(1200, 800));
+		invView.setBounds(7, 7, 1200, 800);
+		
+		JPanel invLeftpanel = new JPanel();
+		
+		JPanel invRightpanel = new JPanel();
+		
+
+		
+		invView.add(invLeftpanel, BorderLayout.WEST);
+		invView.add(invRightpanel, BorderLayout.EAST);
+		
+		invLeftpanel.setLayout(new GridLayout(3, 1, 20, 20));
+		
+		JButton addItemButton = new JButton("Add Item");
+		invLeftpanel.add(addItemButton);
+		
+		JButton editItemButton = new JButton("Edit Item");
+		invLeftpanel.add(editItemButton);
+		
+		JButton removeItemButton = new JButton("Remove Item");
+		invLeftpanel.add(removeItemButton);
+		
+		
+		JTable allItems;		
+		String[] inventoryColumn = {"Barcode","Description","Quantity","Price","Category","Obsolete", "Min"};
+		invTable = DataBaseHandler.getInventoryTable();
+		invSize = invTable.length;
+		DefaultTableModel theInventory = new DefaultTableModel(invTable, inventoryColumn);
+		JTable inventoryOutput = new JTable(theInventory);
+		inventoryOutput.getColumnModel().getColumn(1).setPreferredWidth(200);
+		inventoryOutput.getColumnModel().getColumn(6).setPreferredWidth(50);
+		invSelectModel = inventoryOutput.getSelectionModel();			
+	    invSelectModel.addListSelectionListener(new InventoryListSelectionHandler());
+		JScrollPane inventoryScroll = new JScrollPane(inventoryOutput, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		inventoryScroll.setBounds(7, 7, 400, 800);
+		invRightpanel.add(inventoryScroll);
+		inventoryPane.add(invView);
+		
+		System.out.println("current inventory id is " + inventoryID);
+		
+		//"Barcode","Description","Quantity","Price","Category","Obsolete"
+		addItemButton.addActionListener(new java.awt.event.ActionListener() {
+			@Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				String name =null;
+			    float price =0;
+			    int quantity = 0;
+			    String category = null;
+			    Boolean obsolete = false;
+			    int minimum = 0;
+				
+			    
+			    String floatPattern = "^(([1-9]\\d{0,2}(,\\d{3})*)|(([1-9]\\d*)?\\d))((\\.\\d\\d)|(\\.\\d))?$";
+			    Pattern p = Pattern.compile(floatPattern);
+
+			    String[] categories = {"A", "B", "C", "D", "E", "F", "G", "H", "I", 
+			    				  "J","K", "L","M","N","O","P","Q","R","S","T",
+			    				  "U","V", "W", "X", "Y","Z"};
+		        JComboBox<String> catCombo = new JComboBox<>(categories);
+		        
+		        JTextField namefield = new JTextField();
+		        JTextField pricefield = new JTextField();	
+		        
+				SpinnerNumberModel qModel = new SpinnerNumberModel(30, 0, 999, 1);
+				JSpinner qspinner = new JSpinner(qModel);
+				SpinnerNumberModel mModel = new SpinnerNumberModel(5, 0, 999, 1);
+				JSpinner mspinner = new JSpinner(mModel);
+
+		        JPanel panel = new JPanel(new GridLayout(0, 1));
+		        panel.add(new JLabel("Item Name:"));
+		        panel.add(namefield);
+		        panel.add(new JLabel("Item Price: $#.##"));
+		        panel.add(pricefield);
+		        panel.add(new JLabel("Item Quantity:"));
+		        panel.add(qspinner);
+		        panel.add(new JLabel("Item Category:"));
+		        panel.add(catCombo);
+		        panel.add(new JLabel("Minimum Stock:"));
+		        panel.add(mspinner);
+		        
+		        
+		        int result = JOptionPane.showConfirmDialog(null, panel, "Test",
+		            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		        String nameIn = namefield.getText();
+		        String priceIn = pricefield.getText();
+		        category = (String) catCombo.getSelectedItem();
+		        minimum = (int) mspinner.getValue();
+	        	Matcher m = p.matcher(priceIn);
+		        if (result == JOptionPane.OK_OPTION && m.matches() == true && nameIn.length()>0) {
+		        	quantity = (int) qspinner.getValue();
+		        	name = nameIn;
+		        	price = Float.parseFloat(priceIn);
+		            System.out.println(nameIn
+		                + " " + priceIn
+		                + " " + category
+		                + " " + quantity
+		                + " " + minimum);
+		            DataBaseHandler.addStock(name, price, quantity, category, obsolete, minimum);
+		        } else if (m.matches() == false || nameIn.length()==0){
+		        	JOptionPane.showMessageDialog(OrdersPage, "Please add a name and valid price");
+		        }else
+		        {
+		            System.out.println("Cancelled");
+		        }
+
+		        lastPage = 1;
+				PHP CW = new PHP();
+				frame.setContentPane(CW);
+			}
+		});
+		
+		//button to edit the items already in the order
+		editItemButton.addActionListener(new java.awt.event.ActionListener() {
+					@Override
+					public void actionPerformed(java.awt.event.ActionEvent evt) {
+						//inventoryID
+						String name =null;
+					    float price =0;
+					    int quantity = 0;
+					    String category = null;
+					    boolean obsolete = false;
+					    int minimum = 0;
+					    
+					    for (int i=0; i<invTable.length;i++)
+					    {
+					    	if(invTable[i][0]== inventoryID)
+					    	{
+					    		name = invTable[i][1];
+							    price = Float.parseFloat(invTable[i][3]);
+							    quantity = Integer.parseInt(invTable[i][2]);
+							    category = invTable[i][4];
+							    obsolete = Boolean.parseBoolean(invTable[i][5]);
+							    minimum = Integer.parseInt(invTable[i][6]);
+					    	}
+					    }
+					    
+					    String floatPattern = "^(([1-9]\\d{0,2}(,\\d{3})*)|(([1-9]\\d*)?\\d))((\\.\\d\\d)|(\\.\\d))?$";
+					    Pattern p = Pattern.compile(floatPattern);
+
+					    String[] categories = {"A", "B", "C", "D", "E", "F", "G", "H", "I", 
+					    				  "J","K", "L","M","N","O","P","Q","R","S","T",
+					    				  "U","V", "W", "X", "Y","Z"};
+				        JComboBox<String> catCombo = new JComboBox<>(categories);
+				        
+				        String[] obselecense = {"True", "False"};
+				        JComboBox<String> obsCombo = new JComboBox<>(obselecense);
+				        
+				        catCombo.setSelectedItem(category);
+				        if (obsolete == false)
+				        {
+					        obsCombo.setSelectedItem("False");
+				        }else {
+				        	obsCombo.setSelectedItem("True");
+				        }
+				        JTextField namefield = new JTextField(name);
+				        JTextField pricefield = new JTextField(Float.toString(price));	
+				        
+						SpinnerNumberModel qModel = new SpinnerNumberModel(quantity, 0, 999, 1);
+						JSpinner qspinner = new JSpinner(qModel);
+						SpinnerNumberModel mModel = new SpinnerNumberModel(minimum, 0, 999, 1);
+						JSpinner mspinner = new JSpinner(mModel);
+
+				        JPanel panel = new JPanel(new GridLayout(0, 1));
+				        panel.add(new JLabel("Item Name:"));
+				        panel.add(namefield);
+				        panel.add(new JLabel("Item Price: $#.##"));
+				        panel.add(pricefield);
+				        panel.add(new JLabel("Item Quantity:"));
+				        panel.add(qspinner);
+				        panel.add(new JLabel("Item Category:"));
+				        panel.add(catCombo);
+				        panel.add(new JLabel("Obselete:"));
+				        panel.add(obsCombo);
+				        panel.add(new JLabel("Minimum Stock:"));
+				        panel.add(mspinner);
+				        
+				        
+				        int result = JOptionPane.showConfirmDialog(null, panel, "Test",
+				            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+				        String nameIn = namefield.getText();
+				        String priceIn = pricefield.getText();
+				        category = (String) catCombo.getSelectedItem();
+				        minimum = (int) mspinner.getValue();
+			        	Matcher m = p.matcher(priceIn);
+				        if (result == JOptionPane.OK_OPTION && m.matches() == true && nameIn.length()>0) {
+				        	quantity = (int) qspinner.getValue();
+				        	name = nameIn;
+				        	price = Float.parseFloat(priceIn);
+				            System.out.println(nameIn
+				                + " " + price
+				                + " " + category
+				                + " " + quantity
+				                + " " + minimum);
+				            DataBaseHandler.editStockItem(Integer.parseInt(inventoryID),name, price, quantity, category, obsolete, minimum);
+				        } else if (m.matches() == false || name.length()==0){
+				        	JOptionPane.showMessageDialog(OrdersPage, "Please add a name and valid price, "+m.matches()+" "+name.length());
+				        }else
+				        {
+				            System.out.println("Cancelled");
+				        }
+
+				        lastPage = 1;
+						PHP CW = new PHP();
+						frame.setContentPane(CW);
+					}
+				});
+		
+		removeItemButton.addActionListener(new java.awt.event.ActionListener() {
+			@Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				//inventoryID
+				DataBaseHandler.deleteStock(Integer.parseInt(inventoryID));
+
+		        lastPage = 1;
+				PHP CW = new PHP();
+				frame.setContentPane(CW);
+			}
+		});
 		
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -305,7 +517,7 @@ public class PHP extends JPanel {
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		
 		
-		//Panel 2
+		//Panel 3
 		
 		JComponent salesRecords = makeTextPanel("Sales Records");
 					
@@ -356,7 +568,6 @@ public class PHP extends JPanel {
 		listSelectionModel.addListSelectionListener(new SharedListSelectionHandler());
 		
 		System.out.println("current id is " + reviewOrderID);
-		System.out.println("current zz is " + data.getValueAt(0, 0));
 		
 		if (!reviewOrderID.equals("default")) {
 			{
@@ -442,7 +653,8 @@ public class PHP extends JPanel {
 			}
 		});
 	}
-		
+	
+	
 	class SharedListSelectionHandler implements ListSelectionListener {
 		public void valueChanged(ListSelectionEvent e) {
 			if (!e.getValueIsAdjusting()) {
@@ -461,6 +673,32 @@ public class PHP extends JPanel {
 								reviewOrderID = salesList[i][0];
 							}
 							lastPage = 2;
+							PHP CW = new PHP();
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	class InventoryListSelectionHandler implements ListSelectionListener {
+		public void valueChanged(ListSelectionEvent e) {
+			if (!e.getValueIsAdjusting()) {
+				ListSelectionModel lsm = (ListSelectionModel) e.getSource();
+
+				if (lsm.isSelectionEmpty()) {
+				} else {
+					// Find out which indexes are selected.
+					int minIndex = lsm.getMinSelectionIndex();
+					int maxIndex = lsm.getMaxSelectionIndex();
+					for (int i = minIndex; i <= maxIndex; i++) {
+						if (lsm.isSelectedIndex(i)) {
+							System.out.println("Chosen: " + i);
+							invOrder = i;
+							if (invSize > 0) {
+								inventoryID = invTable[i][0];
+							}
+							lastPage = 1;
 							PHP CW = new PHP();
 						}
 					}

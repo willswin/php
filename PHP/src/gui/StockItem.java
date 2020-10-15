@@ -16,8 +16,9 @@ public class StockItem
     int quantity;
     String category;
     Boolean obsolete;
+    int minStock;
 
-    public StockItem(String n, float p, String id, int qu, String cat, Boolean obs)
+    public StockItem(String n, float p, String id, int qu, String cat, Boolean obs, int ms)
     {
         name = n;
         price = p;
@@ -25,6 +26,7 @@ public class StockItem
         quantity = qu;
         category = cat;
         obsolete = obs;
+        minStock = ms;
     }
     
     public String getName() {
@@ -44,6 +46,9 @@ public class StockItem
     }
     public Boolean getObsolete() {
         return obsolete;
+    }
+    public int getMin() {
+        return minStock;
     }
     
     public void reduceQuantity(int sold) {
