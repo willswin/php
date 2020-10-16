@@ -43,6 +43,33 @@ public class Inventory
 	 protected String category = "";
 	 
 /////////////////////////////////////////////////////////////////////////////////////////
+/*			Test connection to inventory
+1. Returns a boolean result of whether connection to the database is a success
+*/
+/////////////////////////////////////////////////////////////////////////////////////////
+
+
+//1
+	public static boolean testInventoryAccess()
+	{
+		Connection testConn = null;
+		boolean testConnSuccess = true;
+	
+		try {
+			testConn = DriverManager.getConnection("jdbc:mysql://localhost/"+Database+"?", Login.USRN, Login.USRP);
+			testConn.close();
+		}
+		catch (SQLException ex)
+		{
+			testConnSuccess = false;
+		}
+	
+		return testConnSuccess;
+	}
+	 
+	 
+	 
+/////////////////////////////////////////////////////////////////////////////////////////
 	 /*
 	 			Add Item to inventory Methods (barcodes must be unique, names do not need to be)
 	 			
