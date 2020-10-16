@@ -4,6 +4,8 @@ package gui;
  *Based on Tabbed Pane Demo by Oracle
 Copyright (c) 1995, 2008, Oracle and/or its affiliates. All rights reserved.*/
 import java.util.*;
+import inventory.Inventory;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -645,7 +647,11 @@ public class PHP extends JPanel {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				// Turn off metal's use of bold fonts
-				JOptionPane.showMessageDialog(frame, "PlaceHolder Login");
+				
+				if (!Inventory.testInventoryAccess())
+					JOptionPane.showMessageDialog(frame, "WARNING: Cannot Connect to SQL Server");
+		
+				
 				File currentDir = new File("");
 				System.out.println(currentDir.getAbsolutePath());
 				UIManager.put("swing.boldMetal", Boolean.FALSE);				
