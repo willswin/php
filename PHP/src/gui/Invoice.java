@@ -22,7 +22,8 @@ import javax.swing.JTable;
 class Invoice extends JDialog {
 	float totalPrice;
 	String sentToBank="";
-	ArrayList<Sale> currentSales = DataBaseHandler.retrieveSales(); 
+	//ArrayList<Sale> currentSales = DataBaseHandler.retrieveSales(); 
+	ArrayList<Sale> currentSales = new ArrayList<Sale>(); // Loads ONLY the current sale into the array, rather than all previous (SQL ACCESS VIOLATIONS)
     public Invoice( JFrame frame, Order theOrder, String theCurrentOrderID) {
         super( frame, "Invoice", true );
 
@@ -49,11 +50,14 @@ class Invoice extends JDialog {
 			        {
 			        	String menuID = theOrder.getStockItems().get(i).getbc();
 			        	String menuname = theOrder.getStockItems().get(i).getName();
+			        	//int QTY = theOrder.getStockItems().get(i).getQuantity();
 			        	String saleid = theCurrentOrderID;
 			        	int itemSaleID = currentSales.size()+1+i;
+			        	double price = theOrder.getStockItems().get(i).getPrice();
+			        	int quantity = 1;
 			        	LocalDateTime theTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
 			        	//System.out.println("Final Output: "+menuID + " "+menuname+ " "+saleid+ " "+itemSaleID+ " "+theTime);
-						Sale newSale = new Sale(menuID,menuname,saleid,itemSaleID,theTime);
+						Sale newSale = new Sale(menuID,menuname,saleid,itemSaleID,theTime,price,quantity);
 						currentSales.add(newSale);
 			        }
 				 DataBaseHandler.exportSales(currentSales);

@@ -573,8 +573,15 @@ public class PHP extends JPanel {
 		
 		if (!reviewOrderID.equals("default")) {
 			{
-				String [][] itemsInOrder2 = DataBaseHandler.getPastOrder(reviewOrderID);	
-				data.setDataVector(itemsInOrder2, theItemColum);
+				String[][] itemsInOrder2;
+				try {
+					itemsInOrder2 = DataBaseHandler.getPastOrder(reviewOrderID);
+					data.setDataVector(itemsInOrder2, theItemColum);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}	
+				
 			}
 		}
 		

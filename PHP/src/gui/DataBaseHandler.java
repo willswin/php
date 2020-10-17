@@ -6,7 +6,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import dataBaseAccess.Login;
 import inventory.Inventory;
+import inventory.SalesDB;
 
 public class DataBaseHandler {
 
@@ -138,140 +140,115 @@ public class DataBaseHandler {
 	}
 	//"Item", "Count", "Price", "Stock", "Category"
 	
-	public static String[][] getPastOrder(String orderID) {
-		try {
-			// create file reading objects
-			Map<String, Integer> barcodeCounts = new HashMap<String, Integer>();
-			//"Item", "Count", "Price", "Stock", "Category"
-			ArrayList<StockItem> stock = retrieveMenu();
-			FileReader reader = new FileReader("Sales.txt");
-			BufferedReader theFile = new BufferedReader(reader);
-			String stringLine = "";
-			theFile.readLine();
-			while ((stringLine = theFile.readLine()) != null) {
-				String[] lineSplit = stringLine.split(",");
-				String saleid = lineSplit[2].replaceAll("\"", "");
-				if (saleid.contentEquals(orderID))
-				{
-					System.out.println(stringLine);
-					if(!barcodeCounts.containsKey(lineSplit[0]))
-					{
-						barcodeCounts.put(lineSplit[0], 1);
-					}
-					else
-					{
-						int old = barcodeCounts.get(lineSplit[0]);
-						barcodeCounts.replace(lineSplit[0], old+1);
-					}
-
-				}
+	public static String[][] getPastOrder(String orderID) throws Exception
+	{
+		ArrayList<StockItem> allInventory = retrieveMenu();
+		ArrayList<Sale> solditems = new ArrayList<Sale>();
+		SalesDB Listitemsold = new SalesDB(); // Initialise interface instance
+		
+		int itemCount = 0;
+		Listitemsold.RetrieveSoldItems(solditems);
+		String[][] orderDetails = new String[solditems.size()][5];
+		//Collections.sort(allInventory, new invNameComp());
+		//String[][] allInvTable = new String[allInventory.size()()][7];
+		
+		for (int i=0;i<solditems.size();i++)
+		{//TESTING// System.out.print("I made it to the For loop!");
+		
+			if(solditems.get(i).getSaleID().contains(orderID))
 				
-			}
-			
-			String[][] orderDetails = new String[barcodeCounts.size()][5];
-			int itemCount = 0;
-			
-			for (int i=0;i<stock.size();i++)
-			{
-				if (barcodeCounts.containsKey(stock.get(i).getbc()))
+			{	//TESTING//System.out.println("Success! I made it into the if loop");
+				//orderDetails[itemCount][0] = allInventory.get(i).getName();
+				int temp = Integer.valueOf(solditems.get(i).getMenuID());
+				String itemName = "No Matches";
+				String itemcategory = "Z";
+				//System.out.println("The value of temp is:" +temp);
+				//System.out.println("Value of menuID is : "+solditems.get(i).getMenuID());
+				//System.out.println("Value of All inventory is: " +allInventory.get(temp).getName());
+				for(int j =0; j<allInventory.size(); j++)
 				{
-					orderDetails[itemCount][0] = stock.get(i).getName();
-					orderDetails[itemCount][1] = barcodeCounts.get(stock.get(i).getbc()).toString();
-					orderDetails[itemCount][2] = "$" + Float.toString(stock.get(i).getPrice() * barcodeCounts.get(stock.get(i).getbc()))+ " ("
-							+ Float.toString(barcodeCounts.get(stock.get(i).getbc())) + " x $" + barcodeCounts.get(stock.get(i).getbc()).toString() + ")";
-					orderDetails[itemCount][3] = Integer.toString(stock.get(i).getQuantity());
-					orderDetails[itemCount][4] = stock.get(i).getCategory();
-					itemCount++;
+					int tempbarcode = Integer.valueOf(allInventory.get(j).getbc());
+					if(tempbarcode == temp )
+					{
+						itemName = allInventory.get(j).getName();
+						itemcategory = allInventory.get(j).getCategory();
+					}
 				}
+				//System.out.println("Value of All inventory Containing temp is:" +allInventory.contains(temp));
+				//System.out.println("name of the item is: " +itemName);
+				//orderDetails[itemCount][0] = allInventory.get(temp).getName();
+				//setup that it checks allinventory.contains barcode = solditem.barcode
+				////
+				String q = String.valueOf(solditems.get(i).getAmountSold());
+				orderDetails[itemCount][0] = itemName;
+				orderDetails[itemCount][1] = q;
+				String s = String.valueOf(solditems.get(i).getItemSalePrice() );//+ " ("+solditems.get(i).getItemSalePrice()+"*"+ q+")");
+				//String total = s + q;
+				orderDetails[itemCount][2] = s;
+				//orderDetails[itemCount][4] = allInventory.get(temp).getCategory();
+				orderDetails[itemCount][4] = itemcategory;
+				itemCount++;
 			}
-			
-			// Close the resource, and return the array
-			theFile.close();
-			
-			return orderDetails;
-		} catch (FileNotFoundException ex) {
-			// The file didn't exist, show an error
-			System.out.println("Error: Menu File not found.");
-			System.out.println("Please check the path to the file.");
-			System.exit(1);
-		} catch (IOException ex) {
-			// There was an IO error, show and error message
-			System.out.println("Error in reading file. Try closing it and programs that may be accessing it.");
-			System.out.println("If you're accessing this file over a network, try making a local copy.");
-			System.exit(1);
+		
 		}
-
-		return null;
+		return orderDetails;
+			
+		
+		
+		
 	}
 	
-	public static ArrayList<Sale> retrieveSales() {
+	public static ArrayList<Sale> retrieveSales()
+	{
+		SalesDB ListAllSales = new SalesDB();
+		ArrayList<Sale> theSales = new ArrayList<>();
+		//ListAllSales.RetrieveSaleRec();
+		//ListAllSales.RetrieveSaleItem();
 		try {
-			// create file reading objects
-			ArrayList<Sale> theSales = new ArrayList<>();
-			FileReader reader = new FileReader("Sales.txt");
-			BufferedReader theFile = new BufferedReader(reader);
-			String stringLine = "";
-			theFile.readLine();
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-			while ((stringLine = theFile.readLine()) != null) {
-				String[] lineSplit = stringLine.split(",");
-				String menuID = lineSplit[0];
-				String miname = lineSplit[1].replaceAll("\"", "");
-				String saleid = lineSplit[2].replaceAll("\"", "");
-				int itmsaleid = Integer.parseInt(lineSplit[3].replaceAll("\"", ""));
-				LocalDateTime daysold = LocalDateTime.parse(lineSplit[4], formatter);
-				Sale newSale = new Sale(menuID, miname, saleid, itmsaleid, daysold);
-				theSales.add(newSale);
-			}
-
-			// Close the resource, and return the array
-			theFile.close();
-			return theSales;
-		} catch (FileNotFoundException ex) {
-			// The file didn't exist, show an error
-			System.out.println("Error: Menu File not found.");
-			System.out.println("Please check the path to the file.");
-			System.exit(1);
-		} catch (IOException ex) {
-			// There was an IO error, show and error message
-			System.out.println("Error in reading file. Try closing it and programs that may be accessing it.");
-			System.out.println("If you're accessing this file over a network, try making a local copy.");
-			System.exit(1);
+		ListAllSales.RetrieveSalesRecord(theSales);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
-		return null;
+		finally {}
+		return theSales;
 	}
 	
 	public static void exportSales(ArrayList<Sale> theSales) 
 	{
 		SalesDB ThisSale = new SalesDB();
 		String Staff_notes = "";
-		int check = 0; // Sale record product flag.
+		//int check = 0; // Sale record product flag.
+		String WriteOnce;
+		String PreviousWrite = null;
 		for(int i = 0; i < theSales.size(); i++)
 			{
 			Sale curSale = theSales.get(i);
-					
+			WriteOnce = curSale.getSaleID();		
 			String finalCheck = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").format(curSale.getDaySold());
 			try {
-				ThisSale.AddSaleItem(curSale.getSaleID(), Integer.parseInt(curSale.getMenuID()), curSale.getItemSaleID(), curSale.getItemSalePrice());
+				// Adds a Single Entry Per Item 
+				ThisSale.AddSaleItem(curSale.getSaleID(), Integer.parseInt(curSale.getMenuID()), curSale.getAmountSold(), curSale.getItemSalePrice());
 			    } 
 			catch (Exception e) 
 			{			
 			e.printStackTrace();
 			}
 					
-			if(check == 0)
+			//if(check == 0)
+			if(WriteOnce != PreviousWrite)
 			{
 			try {
 				ThisSale.AddSaleRec(curSale.getSaleID(), Login.USRN, curSale.getDaySold(), Staff_notes);
-				check = 1; // disables second record being written.
+				//check = 1; // disables second record being written.
 				}
 				catch (Exception e)
 				{						
 					e.printStackTrace();
 				}
 			}
-					
+				PreviousWrite = WriteOnce;	
 		}
 		
 	}
