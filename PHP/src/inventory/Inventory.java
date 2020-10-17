@@ -25,8 +25,8 @@ import dataBaseAccess.Login;
  */
 public class Inventory
 {
-	public static String USRN = "will";
-	public static String USRP = "willpass";
+	public static String USRN = "phpadmin";
+	public static String USRP = "phpadminpw";
 	public static String Database = "dp2pharm"; 
 	 protected Connection connect = null;
 	 protected Statement statement = null;
