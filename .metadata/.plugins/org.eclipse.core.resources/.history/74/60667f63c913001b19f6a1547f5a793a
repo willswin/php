@@ -1,0 +1,129 @@
+package gui;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Map;
+import java.util.Vector;
+
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+
+
+//invoice dialog that displays the final order, tallies the cost, applies discounts and sends the result to the payment provider
+
+class WeeklyReport extends JDialog {
+	float totalPrice;
+	String sentToBank="";
+	//ArrayList<Sale> currentSales = DataBaseHandler.retrieveSales(); 
+	ArrayList<Sale> currentSales = new ArrayList<Sale>(); // Loads ONLY the current sale into the array, rather than all previous (SQL ACCESS VIOLATIONS)
+    public WeeklyReport(JFrame frame,String date) throws Exception {
+        super( frame, "Weekly Report", true );
+        
+        String[][] reportTable = DataBaseHandler.getRawWeekly(date);
+        String[] reportColumns = { "Item", "Count", "Price", "Gross", "Category", "Date"};
+        JTable table = new JTable( reportTable, reportColumns );
+        Container c = getContentPane();
+        c.setLayout( new FlowLayout() );
+        c.setPreferredSize(new Dimension(1500,630));
+        table.setPreferredScrollableViewportSize(new Dimension(500, 600));
+        table.setFillsViewportHeight(true); 
+		JScrollPane tablePane = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        c.add(tablePane);
+        
+        String[][] inventoryStatistics = DataBaseHandler.getWeeklySummaryReport(date);
+        String[] sumColumns = { "Barcode", "Item", "Price", "Sales", "Monthly Gross", "Category","Stock", "Min Stock","Restock"};
+        JTable summaryTable = new JTable( inventoryStatistics, sumColumns );
+        summaryTable.setPreferredScrollableViewportSize(new Dimension(700, 600));
+        summaryTable.setFillsViewportHeight(true); 
+		JScrollPane sumPane = new JScrollPane(summaryTable, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        c.add( sumPane );
+        
+        JPanel buttonView = new JPanel();
+        buttonView.setPreferredSize(new Dimension(180, 150));
+        buttonView.setLayout(new GridLayout(2, 1, 20, 20));
+		JButton genButton = new JButton("Generate CSV");
+		buttonView.add(genButton);
+		
+		JButton cancButton = new JButton("Return");
+		buttonView.add(cancButton);
+        c.add(buttonView);
+		/*
+		//button to submit the order payment
+		genButton.addActionListener(new java.awt.event.ActionListener() {
+			@Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				System.out.println("CSV CREATED");
+				
+				try {
+					// create file reading objects
+					FileWriter fw = new FileWriter(year+"_"+month+"_Report.csv");
+					BufferedWriter theFile = new BufferedWriter(fw);
+
+					theFile.write("\"Item\",\"Count\",\"Price\",\"Gross\",\"Category\",\"Date\"\n");
+					for (int j=0;j<reportTable.length;j++)
+					{
+						String outputLine = "";
+						for (int i=0;i<reportTable[j].length;i++)
+						{
+							outputLine +="\""+reportTable[j][i]+"\",";							
+						}
+						outputLine +="\n";
+						theFile.write(outputLine);
+					}
+					theFile.write("\n\n");
+					
+					theFile.write("\"Barcode\",\"Item\",\"Price\",\"Sales\",\"Monthly Gross\",\"Category\",\"Stock\",\"Min Stock\",\"Restock\"\n");
+					for (int j=0;j<inventoryStatistics.length;j++)
+					{
+						String outputLine = "";
+						for (int i=0;i<inventoryStatistics[j].length;i++)
+						{
+							outputLine +="\""+inventoryStatistics[j][i]+"\",";							
+						}
+						outputLine +="\n";
+						theFile.write(outputLine);
+					}
+										
+					// Close the resource, and return the array
+					theFile.close();
+				} catch (FileNotFoundException ex) {
+					// The file didn't exist, show an error
+					System.out.println("Error: File not found.");
+					System.out.println("Please check the path to the file.");
+					System.exit(1);
+				} catch (IOException ex) {
+					// There was an IO error, show and error message
+					System.out.println("Error in reading file. Try closing it and programs that may be accessing it.");
+					System.out.println("If you're accessing this file over a network, try making a local copy.");
+					System.exit(1);
+				}
+			}
+		});*/
+		
+		cancButton.addActionListener(new java.awt.event.ActionListener() {
+			@Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				WeeklyReport.this.setVisible(false);				 
+			}
+		});
+		
+        this.pack();
+        this.show();
+    }
+}

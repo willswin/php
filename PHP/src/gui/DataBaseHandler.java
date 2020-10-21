@@ -10,6 +10,7 @@ import dataBaseAccess.Login;
 import inventory.Inventory;
 import inventory.ReportDB;
 import inventory.SalesDB;
+import inventory.WeeklyReportDB2;
 
 public class DataBaseHandler {
 
@@ -96,6 +97,20 @@ public class DataBaseHandler {
 		return orderDetails;	
 		
 	}
+	
+	public static String[] getCategory(String cata) throws Exception
+	{
+		Inventory inv = new Inventory(); // Initialise interface instance
+		ArrayList<StockItem> matchingCata = inv.getCataDB(cata);	
+		
+		String[] cataTable = new String[matchingCata.size()];
+		for (int i=0;i<matchingCata.size();i++)
+		{
+			cataTable[i] = matchingCata.get(i).getName();
+		}
+		return cataTable;	
+	}
+	
 	public static String[][] getRawReport(int month, int year) throws Exception
 	{
 		ReportDB ListReportMonthly = new ReportDB(); // Initialise interface instance
@@ -106,6 +121,19 @@ public class DataBaseHandler {
 		for (int i=0;i<fullMonthly.size();i++)
 		{
 			monthlyTable[i] = fullMonthly.get(i);
+		}
+		return monthlyTable;	
+	}
+	
+	public static String[][] getRawWeekly(String date) throws Exception
+	{
+		WeeklyReportDB2 ListReportWeekly = new WeeklyReportDB2(); // Initialise interface instance
+		ArrayList<String[]> fullWeekly = ListReportWeekly.RetrieveWeeklyReport(date);		
+		
+		String[][] monthlyTable = new String[fullWeekly.size()][6];
+		for (int i=0;i<fullWeekly.size();i++)
+		{
+			monthlyTable[i] = fullWeekly.get(i);
 		}
 		return monthlyTable;	
 	}
@@ -122,6 +150,19 @@ public class DataBaseHandler {
 			monthlyTable[i] = fullMonthly.get(i);
 		}
 		return monthlyTable;	
+	}
+	
+	public static String[][] getWeeklySummaryReport(String date) throws Exception
+	{
+		WeeklyReportDB2 ListReportWeekly = new WeeklyReportDB2(); // Initialise interface instance
+		ArrayList<String[]> fullWeekly = ListReportWeekly.RetrieveWeeklySummaryReport(date);		
+		
+		String[][] weeklyTable = new String[fullWeekly.size()][9];
+		for (int i=0;i<fullWeekly.size();i++)
+		{
+			weeklyTable[i] = fullWeekly.get(i);
+		}
+		return weeklyTable;	
 	}
 	
 	public static ArrayList<Sale> retrieveSales()

@@ -1,0 +1,261 @@
+package gui;
+import java.io.*;
+import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+
+import dataBaseAccess.Login;
+import inventory.Inventory;
+import inventory.ReportDB;
+import inventory.SalesDB;
+
+public class DataBaseHandler {
+
+	/**
+	 * Reads the file that has been provided to the program. Information is stored
+	 * in a 2D array that represents the floor Static ensures that only one file can
+	 * be read.
+	 * 
+	 * @param fileName - The name of the file to read from
+	 * @return - The 2D array with the floor information
+	 */
+	
+	//Database Handler accesses files on behalf of the program, reading, formatting and writing the information as needed.
+	//Original intention was to use a database, but SQL will not work on my PC
+	// Creates a new instance of Inventory.inventory to enact changes, this instance closes after use to prevent memory leaks -JH
+	public static ArrayList<StockItem> retrieveMenu() {
+			// create file reading objects
+			ArrayList<StockItem> menu = new ArrayList<>();
+			
+			Inventory phpStock = new Inventory();		// New Instance of java Connection		
+			try {
+				phpStock.ReadDB(menu);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} // Updates menu obj with current Database Information
+			return menu;
+				
+
+	}
+	
+	
+	//get 2d array of all inventory items
+	public static String[][] getInventoryTable() {
+		ArrayList<StockItem> allInventory = retrieveMenu();
+		
+		Collections.sort(allInventory, new invNameComp());
+		
+		String[][] allInvTable = new String[allInventory.size()][7];
+		
+		//"Barcode","Description","Quantity","Price","Category","Obsolete"
+		for (int i=0; i<allInventory.size();i++) {
+			allInvTable[i][0] = allInventory.get(i).barcode;
+			allInvTable[i][1] = allInventory.get(i).name;
+			allInvTable[i][2] = Integer.toString(allInventory.get(i).quantity);
+			allInvTable[i][3] = Float.toString(allInventory.get(i).price);
+			allInvTable[i][4] = allInventory.get(i).category;
+			allInvTable[i][5] = Boolean.toString(allInventory.get(i).obsolete);
+			allInvTable[i][6] = Integer.toString(allInventory.get(i).minStock);
+		}
+		return allInvTable;
+	}
+	
+	
+	//each seperate sale ID and time
+	public static String[][] getSaleIDTime() {
+		ArrayList<Sale> allSales = retrieveSales();		
+		
+		String[][] exportSales = new String[allSales.size()][2];
+
+		
+		
+		for (int k=0; k<allSales.size();k++) {
+			exportSales[k][0]= allSales.get(k).saleID;
+			exportSales[k][1]= allSales.get(k).daySold;
+		}
+		return exportSales;
+	}
+	//"Item", "Count", "Price", "Stock", "Category"
+	
+	public static String[][] getPastOrder(String orderID) throws Exception
+	{
+		SalesDB Listitemsold = new SalesDB(); // Initialise interface instance
+		ArrayList<String[]> solditems = Listitemsold.RetrieveSoldItems(orderID);	
+		
+		String[][] orderDetails = new String[solditems.size()][5];
+		System.out.println(solditems.size());
+		for (int i=0;i<solditems.size();i++)
+		{
+			System.out.println(solditems.get(i)[0]);
+			orderDetails[i] = solditems.get(i);
+		}
+		
+		return orderDetails;	
+		
+	}
+	public static String[][] getRawReport(int month, int year) throws Exception
+	{
+		ReportDB ListReportMonthly = new ReportDB(); // Initialise interface instance
+		ArrayList<String[]> fullMonthly = ListReportMonthly.RetrieveMonthlyReport(month,year);
+		
+		
+		String[][] monthlyTable = new String[fullMonthly.size()][6];
+		for (int i=0;i<fullMonthly.size();i++)
+		{
+			monthlyTable[i] = fullMonthly.get(i);
+		}
+		return monthlyTable;	
+	}
+	
+	public static String[][] getSummaryReport(int month, int year) throws Exception
+	{
+		ReportDB ListReportMonthly = new ReportDB(); // Initialise interface instance
+		ArrayList<String[]> fullMonthly = ListReportMonthly.RetrieveMonthlySummaryReport(month,year);
+		
+		
+		String[][] monthlyTable = new String[fullMonthly.size()][9];
+		for (int i=0;i<fullMonthly.size();i++)
+		{
+			monthlyTable[i] = fullMonthly.get(i);
+		}
+		return monthlyTable;	
+	}
+	
+	public static ArrayList<Sale> retrieveSales()
+	{
+		SalesDB ListAllSales = new SalesDB();
+		ArrayList<Sale> theSales = new ArrayList<>();
+		//ListAllSales.RetrieveSaleRec();
+		//ListAllSales.RetrieveSaleItem();
+		try {
+		ListAllSales.RetrieveSalesRecord(theSales);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		finally {}
+		return theSales;
+	}
+	
+	public static void exportSales(ArrayList<Sale> theSales) 
+	{
+		SalesDB ThisSale = new SalesDB();
+		//int check = 0; // Sale record product flag.
+		String WriteOnce;
+		String PreviousWrite = null;
+		for(int i = 0; i < theSales.size(); i++)
+			{
+			Sale curSale = theSales.get(i);
+			WriteOnce = curSale.getSaleID();		
+			//DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+			//LocalDateTime finalCheck = LocalDateTime.parse(curSale.getDaySold(), dtf);
+			
+					
+			//if(check == 0)
+			if(WriteOnce != PreviousWrite)
+			{
+			try {
+				ThisSale.AddSaleRec(curSale.getSaleID(), Login.USRN, curSale.getDaySold());
+				//check = 1; // disables second record being written.
+				}
+				catch (Exception e)
+				{						
+					e.printStackTrace();
+				}
+			}
+				PreviousWrite = WriteOnce;
+				try {
+					// Adds a Single Entry Per Item 
+					ThisSale.AddSaleItem(curSale.getSaleID(), Integer.parseInt(curSale.getMenuID()));
+				    } 
+				catch (Exception e) 
+				{			
+				e.printStackTrace();
+				}
+		}
+		
+		
+	}
+	//Implemented - JH
+	public static void updateStock(String[][] table) {
+		ArrayList<StockItem> oldStock = retrieveMenu();
+		Inventory phpStock = new Inventory();		// New Instance of java Connection		
+		
+		for (int j=0;j<oldStock.size();j++)
+		{
+			for (int i=0;i<table.length-1;i++)
+			{
+				if (Integer.parseInt(table[i][5])==Integer.parseInt(oldStock.get(j).getbc()))
+				{
+					oldStock.get(j).reduceQuantity(Integer.parseInt(table[i][1]));
+					try {
+						// are you attempting to decrement the item quantity multiple times? item barcode being j? -JH
+						//phpStock.EditItemMinusOne(Integer.parseInt(oldStock.get(j).getbc()));
+						phpStock.EditItemMinusAmt(Integer.parseInt(oldStock.get(j).getbc()), Integer.parseInt(table[i][1]));
+					} catch (SQLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					//TESTING//System.out.println(" The current i value is:" +Integer.parseInt(table[i][1]));
+				}				
+			}
+		}
+		
+		
+	}
+
+	public static void addStock(String name, float price, int quantity, String category, Boolean obsolete, int Minimum) {
+		Inventory phpStock = new Inventory();		// New Instance of java Connection		
+		int val = (obsolete) ? 1 : 0;
+		try {
+			// adding a new line
+			phpStock.Add(name, quantity, price, category, val, Minimum);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static void deleteStock(int code) {
+		Inventory phpStock = new Inventory();		// New Instance of java Connection		
+		// adding a new line
+		try {
+			phpStock.Delete(code);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static void editStockItem(int code, String name, float price, int quantity, String category, Boolean obsolete, int Minimum) {
+		Inventory phpStock = new Inventory();		// New Instance of java Connection		
+		int val = (obsolete) ? 1 : 0;
+		try {
+			// adding a new line
+			phpStock.EditName(code, name);
+			phpStock.EditPrice(code, price);
+			phpStock.EditQuantity(code, quantity);
+			phpStock.EditCategory(code, category);
+			phpStock.EditObsolescence(code, val);
+			phpStock.EditMinimum(code, Minimum);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
+}
+
+class invNameComp implements Comparator<StockItem> {
+    public int compare(StockItem item1, StockItem item2) {
+        return item1.getName().compareTo(item2.name);
+    }
+}
