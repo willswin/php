@@ -1,0 +1,152 @@
+package inventory;
+
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Time;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+
+import dataBaseAccess.Login;
+import gui.Sale;
+import gui.StockItem;
+
+// File Name Changed from Sale to SalesDB to prevent clashes with GUI Sale.java
+
+// See Inventory.Java for SQL method Comments
+
+public class ReportDB
+{
+	 protected Connection connect = null;
+	 protected Statement statement = null;
+	 protected PreparedStatement preparedStatement = null;
+	 protected ResultSet resultSet = null;
+	 protected int amount = 0;
+	 protected int bar = 0;
+	 protected int obsolescence = 0; // 0 = not discontinues, 1 = discontinued
+	 protected double price = 0; // adds zero price
+	 protected String name = "";
+	 protected String category = "";
+	 protected ResultSet SaleRecordSet = null;
+	 protected ResultSet SaleItemSet = null;
+	
+	
+	 private void close() 
+		{// Ends all threads
+	 		try {
+	 			if (resultSet != null) 
+	 			{
+	 				resultSet.close();
+	 			}
+
+	 			if (statement != null)
+	 			{
+	 				statement.close();
+	 			}
+
+	 			if (connect != null) 
+	 			{
+	 				connect.close();
+	 			}
+	 	
+	 			}
+	 			catch (Exception e)
+	 			{
+
+	 			}
+	 	
+		}
+
+	public ArrayList<String[]> RetrieveMonthlyReport(int month, int year) throws SQLException, ClassNotFoundException
+	{
+		String date1 = year+"-"+month+"-01";
+		String date2 = "";
+		if (month<12)
+		{
+			date2 = year+"-"+(month+1)+"-01";
+		}
+		else
+		{
+			date2 = (year+1)+"-01-01";
+		}
+		
+		 Class.forName("com.mysql.jdbc.Driver");
+		 connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?", Login.USRN, Login.USRP);
+		 statement = connect.createStatement();
+		 SaleItemSet = statement.executeQuery("SELECT item_desc, COUNT(*), item_price, item_category, CAST(Sale_Time AS DATE )\r\n" + 
+		 		"FROM dp2pharm.saleitem\r\n" + 
+		 		"INNER JOIN dp2pharm.inventory on saleitem.item_barcode = inventory.item_barcode\r\n" + 
+		 		"INNER JOIN dp2pharm.salerecord on saleitem.Sale_Code = salerecord.Sale_Code\r\n" + 
+		 		"WHERE (CAST(Sale_Time AS DATE ) BETWEEN '"+date1+"' AND '"+date2+"') AND MONTH(Sale_Time)="+month+"\r\n" + 
+		 		"GROUP BY CAST(salerecord.Sale_Time AS DATE ), inventory.item_barcode\r\n" + 
+		 		"HAVING\r\n" + 
+		 		"	COUNT(*) >= 1\r\n" + 
+		 		"ORDER BY salerecord.Sale_Time ASC");
+		ArrayList<String[]> reportOut = new ArrayList<String[]>();
+        while (SaleItemSet.next()) 
+    	{
+     	  String name = (SaleItemSet.getString("item_desc")); 
+     	  Integer count = (SaleItemSet.getInt("COUNT(*)"));
+     	  Float priceper = (SaleItemSet.getFloat("item_price"));
+     	  Float priceAll = count*priceper;
+    	  String category = (SaleItemSet.getString("item_category"));
+    	  String date = (SaleItemSet.getString("CAST(Sale_Time AS DATE )"));
+    	  String[] newItem = {name, count.toString(), priceper.toString(), priceAll.toString(), category, date};
+    	  reportOut.add(newItem);
+    	}
+		return reportOut;	
+	}
+	
+	public ArrayList<String[]> RetrieveMonthlySummaryReport(int month, int year) throws SQLException, ClassNotFoundException
+	{
+		String date1 = year+"-"+month+"-01";
+		String date2 = "";
+		if (month<12)
+		{
+			date2 = year+"-"+(month+1)+"-01";
+		}
+		else
+		{
+			date2 = (year+1)+"-01-01";
+		}
+		
+		 Class.forName("com.mysql.jdbc.Driver");
+		 connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?", Login.USRN, Login.USRP);
+		 statement = connect.createStatement();
+		 SaleItemSet = statement.executeQuery("SELECT saleitem.item_barcode, item_desc, item_price, COUNT(*), item_category, minimum_stock, item_quantity\r\n" + 
+		 		"FROM dp2pharm.saleitem\r\n" + 
+		 		"INNER JOIN dp2pharm.inventory on saleitem.item_barcode = inventory.item_barcode\r\n" + 
+		 		"INNER JOIN dp2pharm.salerecord on saleitem.Sale_Code = salerecord.Sale_Code\r\n" + 
+		 		"WHERE (CAST(Sale_Time AS DATE ) BETWEEN '2020-10-01' AND '2020-11-01') AND MONTH(Sale_Time)=10\r\n" + 
+		 		"GROUP BY MONTH(Sale_Time), inventory.item_barcode\r\n" + 
+		 		"HAVING\r\n" + 
+		 		"	COUNT(*) >= 1\r\n" + 
+		 		"ORDER BY salerecord.Sale_Time ASC");
+		ArrayList<String[]> reportOut = new ArrayList<String[]>();
+        while (SaleItemSet.next()) 
+    	{
+          Integer bc = (SaleItemSet.getInt("item_barcode"));
+     	  String name = (SaleItemSet.getString("item_desc")); 
+     	  Float priceper = (SaleItemSet.getFloat("item_price"));
+     	  Integer count = (SaleItemSet.getInt("COUNT(*)"));
+     	  Float priceAll = count*priceper;
+    	  String category = (SaleItemSet.getString("item_category"));
+    	  Integer stockMin = (SaleItemSet.getInt("minimum_stock"));
+    	  Integer stock = (SaleItemSet.getInt("item_quantity"));
+    	  Boolean restock = stock-count<stockMin;
+    	  String[] newItem = {bc.toString(), name, priceper.toString(),count.toString(), priceAll.toString(), category, restock.toString()};
+    	  reportOut.add(newItem);
+    	}
+		return reportOut;	
+	}
+	 
+	
+	
+}

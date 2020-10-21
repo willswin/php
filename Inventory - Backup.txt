@@ -1,7 +1,0 @@
-"Barcode","Description","Quantity","Price","Category","Obsolete"
-1,"Paracetamol",60,$5.00,"B","false"
-2,"Cough Medicine",60,$9.00,"A","false"
-3,"Insulin",60,$4.00,"B","false"
-4,"Skin Cream",60,$6.00,"D","false"
-5,"Adalimumab",60,$5.00,"B","false"
-6,"Diabetes Gummies",60,$3.50,"K","false"

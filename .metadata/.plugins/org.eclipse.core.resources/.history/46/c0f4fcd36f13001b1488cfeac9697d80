@@ -1,0 +1,80 @@
+package gui;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Vector;
+
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+
+
+//invoice dialog that displays the final order, tallies the cost, applies discounts and sends the result to the payment provider
+
+class MonthlyReport extends JDialog {
+	float totalPrice;
+	String sentToBank="";
+	//ArrayList<Sale> currentSales = DataBaseHandler.retrieveSales(); 
+	ArrayList<Sale> currentSales = new ArrayList<Sale>(); // Loads ONLY the current sale into the array, rather than all previous (SQL ACCESS VIOLATIONS)
+    public MonthlyReport(JFrame frame,int month, int year) throws Exception {
+        super( frame, "Monthly Report", true );
+
+        String[][] reportTable = DataBaseHandler.getRawReport(month, year);
+        String[] reportColumns = { "Item", "Count", "Price", "Gross", "Category", "Date"};
+        JTable table = new JTable( reportTable, reportColumns );
+        Container c = getContentPane();
+        c.setLayout( new FlowLayout() );
+        c.setPreferredSize(new Dimension(1500,630));
+        table.setPreferredScrollableViewportSize(new Dimension(500, 600));
+        table.setFillsViewportHeight(true); 
+		JScrollPane tablePane = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        c.add(tablePane);
+        
+        String[][] inventoryStatistics = DataBaseHandler.getSummaryReport(month, year);
+        String[] sumColumns = { "Barcode", "Item", "Price", "Sales", "Monthly Gross", "Category","Stock", "Min Stock","Restock"};
+        JTable summaryTable = new JTable( inventoryStatistics, sumColumns );
+        summaryTable.setPreferredScrollableViewportSize(new Dimension(700, 600));
+        summaryTable.setFillsViewportHeight(true); 
+		JScrollPane sumPane = new JScrollPane(summaryTable, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        c.add( sumPane );
+        
+        JPanel buttonView = new JPanel();
+        buttonView.setPreferredSize(new Dimension(150, 100));
+        buttonView.setLayout(new GridLayout(2, 1, 20, 20));
+		JButton genButton = new JButton("Generate CSV");
+		buttonView.add(genButton);
+		
+		JButton cancButton = new JButton("Return");
+		buttonView.add(cancButton);
+        c.add(buttonView);
+		
+		//button to submit the order payment
+		genButton.addActionListener(new java.awt.event.ActionListener() {
+			@Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				System.out.println("CSV CREATED");				 
+			}
+		});
+		
+		cancButton.addActionListener(new java.awt.event.ActionListener() {
+			@Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				MonthlyReport.this.setVisible(false);				 
+			}
+		});
+		
+        this.pack();
+        this.show();
+    }
+}

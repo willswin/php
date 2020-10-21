@@ -56,8 +56,10 @@ class Invoice extends JDialog {
 			        	double price = theOrder.getStockItems().get(i).getPrice();
 			        	int quantity = 1;
 			        	LocalDateTime theTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+			        	String[] splitTime = theTime.toString().split("T");
+			        	String finalTime = splitTime[0] + " " + splitTime[1];
 			        	//System.out.println("Final Output: "+menuID + " "+menuname+ " "+saleid+ " "+itemSaleID+ " "+theTime);
-						Sale newSale = new Sale(menuID,menuname,saleid,itemSaleID,theTime,price,quantity);
+			        	Sale newSale = new Sale(menuID,menuname,saleid,itemSaleID,theTime.toString(),price,quantity);
 						currentSales.add(newSale);
 			        }
 				 DataBaseHandler.exportSales(currentSales);

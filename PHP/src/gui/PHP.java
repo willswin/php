@@ -63,7 +63,7 @@ public class PHP extends JPanel {
 		
 		JComponent OrdersPage = makeTextPanel(null);
 		OrdersPage.setLayout(new BoxLayout(OrdersPage, BoxLayout.LINE_AXIS));
-		tabbedPane.addTab("Orders", null, OrdersPage, "List of Table Orders");
+		tabbedPane.addTab("Orders", null, OrdersPage, "Process New Orders");
 		
 		
 
@@ -555,16 +555,16 @@ public class PHP extends JPanel {
 		tablePane.setBounds(7, 7, 400, 800);
 		saleRightpanel.add(tablePane);		
 		
-		saleLeftpanel.setLayout(new GridLayout(3, 1, 20, 20));
-		
-		JButton saleButton = new JButton("View Sale");
-		saleLeftpanel.add(saleButton);
+		saleLeftpanel.setLayout(new GridLayout(3, 1, 20, 20));		
 		
 		JButton editButton = new JButton("Edit Sale");
 		saleLeftpanel.add(editButton);
 		
-		JButton reportButton = new JButton("Generate Report");
-		saleLeftpanel.add(reportButton);	
+		JButton reportWButton = new JButton("Weekly Report");
+		saleLeftpanel.add(reportWButton);	
+		
+		JButton reportMButton = new JButton("Monthly Report");
+		saleLeftpanel.add(reportMButton);
 		
 				
 		listSelectionModel.addListSelectionListener(new SharedListSelectionHandler());
@@ -594,11 +594,60 @@ public class PHP extends JPanel {
 		salePreviewpanel.add(reviewOrderPane);
 
 			
-		saleButton.addActionListener(new java.awt.event.ActionListener() {
+		reportMButton.addActionListener(new java.awt.event.ActionListener() {
 			@Override
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				
+				int month = 1;
+			    int year= 2020;		    
+
+			    String[] months = {"January", "February", "March", "April", "May", "June", "July", "August", "September", 
+			    				  "October","November", "December"};
+			    int[] months2 = {1,2,3,4,5,6,7,8,9,10,11,12};
+		        JComboBox<String> monthsCombo = new JComboBox<>(months);
+		        		       
+		        
+		        monthsCombo.setSelectedItem(months);
+
+		        
+				SpinnerNumberModel qModel = new SpinnerNumberModel(year, 2020, 2120, 1);
+				JSpinner qspinner = new JSpinner(qModel);
+				qspinner.setEditor(new JSpinner.NumberEditor(qspinner,"#"));
+
+		        JPanel panel = new JPanel(new GridLayout(0, 1));
+		        panel.add(new JLabel("Month: "));
+		        panel.add(monthsCombo);
+		        panel.add(new JLabel("Year: "));
+		        panel.add(qspinner);
+				
+		        
+		        int result = JOptionPane.showConfirmDialog(null, panel, "Test",
+			            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+			        
+			        if (result == JOptionPane.OK_OPTION) {
+			        	month = months2[monthsCombo.getSelectedIndex()];
+				        year = (int) qspinner.getValue();
+			            System.out.println(month
+			                + " " + year);
+			            
+						try {
+							new MonthlyReport(frame, month, year);
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+			            
+			        }else
+			        {
+			            System.out.println("Cancelled");
+			        }
+		        
+		        
 				lastPage = 2;
-				PHP CW = new PHP();	
+				OH.removeOrder(currentOrderID);
+				currentOrderID = "default";
+				PHP CW = new PHP();
+				frame.setContentPane(CW);	
 			}
 		});
 		
