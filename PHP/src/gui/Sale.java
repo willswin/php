@@ -10,10 +10,10 @@ public class Sale {
 	int itemSaleID;
 	double itemSalePrice;
 	int quantity;
-	LocalDateTime daySold;
+	String daySold;
 	
 	//Sale struct, making up for no queries
-	public Sale(String mID, String mIDN, String sID, int isID, LocalDateTime dS, double price) {
+	public Sale(String mID, String mIDN, String sID, int isID, String dS, double price) {
 		menuID=mID;
 		mIDName =mIDN;
 		saleID=sID;
@@ -22,7 +22,7 @@ public class Sale {
 		itemSalePrice = price;
 	}
 	
-	public Sale(String mID, String mIDN, String sID, int isID, LocalDateTime dS, double price, int QTY) {
+	public Sale(String mID, String mIDN, String sID, int isID, String dS, double price, int QTY) {
 		menuID=mID;
 		mIDName =mIDN;
 		saleID=sID;
@@ -40,7 +40,7 @@ public class Sale {
 		quantity = QTYSold;
 	}
 
-	public Sale(String recordId, String staffId, LocalDateTime dateTimeofSale)
+	public Sale(String recordId, String staffId, String dateTimeofSale)
 	{
 		saleID = recordId;
 		EmployeeID = staffId;
@@ -63,7 +63,7 @@ public class Sale {
 		return itemSaleID;
 	}
 
-	public LocalDateTime getDaySold() {
+	public String getDaySold() {
 		return daySold;
 	}
 

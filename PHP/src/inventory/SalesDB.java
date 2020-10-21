@@ -38,24 +38,24 @@ public class SalesDB
 	 protected ResultSet SaleItemSet = null;
 	private String Staff_id;
 	
-	 public void AddSaleRec(String Sale_id, String Staff_id, LocalDateTime TimeofSale, String Staff_notes) throws Exception
+	 public void AddSaleRec(String Sale_id, String Staff_id, String TimeofSale) throws Exception
 	 {
 		 try {
-				connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?", Login.USRN, Login.USRP);
+				connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?useSSL=false", Login.USRN, Login.USRP);
 				statement = connect.createStatement();
-				String sql = "INSERT INTO salerecord Values ('" + Sale_id +"','" + Staff_id + "','" + TimeofSale + "','" + Staff_notes + "')";
+				String sql = "INSERT INTO salerecord Values ('" + Sale_id +"','" + Staff_id + "','" + TimeofSale + "')";
 				statement.executeUpdate(sql);
 				} 
 	        catch (Exception e) { throw e; }    
 	        finally { close();  }
 	 }
 	
-	 public void AddSaleItem(String Sale_id, int Barcode,  int Amount, double Price) throws Exception
+	 public void AddSaleItem(String Sale_id, int Barcode) throws Exception
 	 {
 		 try {
-				connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?", Login.USRN, Login.USRP);
+				connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?useSSL=false", Login.USRN, Login.USRP);
 				statement = connect.createStatement();
-				String sql = "INSERT INTO saleitem Values ('" + Sale_id +"','" + Barcode + "','" + Amount + "','" + Price + "')";
+				String sql = "INSERT INTO saleitem Values ('" + Sale_id +"','" + Barcode + "')";
 				statement.executeUpdate(sql);
 				} 
 	        catch (Exception e) { throw e; }    
@@ -167,40 +167,51 @@ public class SalesDB
 	 	
 		}
 
-	public ArrayList<Sale> RetrieveSoldItems(ArrayList<Sale> solditems) throws SQLException, ClassNotFoundException
+	public ArrayList<String[]> RetrieveSoldItems(String orderID) throws SQLException, ClassNotFoundException
 	{
-		Class.forName("com.mysql.jdbc.Driver");
-		 connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?", Login.USRN, Login.USRP);
+		 Class.forName("com.mysql.jdbc.Driver");
+		 connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?useSSL=false", Login.USRN, Login.USRP);
 		 statement = connect.createStatement();
-		 SaleItemSet = statement.executeQuery("select * from "+Login.Database+".saleitem");
-        
+		 SaleItemSet = statement.executeQuery("SELECT Sale_Code, item_desc, COUNT(*), item_price, item_quantity, item_category\r\n" + 
+		 		"FROM dp2pharm.saleitem inner join dp2pharm.inventory on inventory.item_barcode = saleitem.item_barcode\r\n" + 
+		 		"WHERE Sale_Code LIKE '%"+orderID+"%'\r\n" + 
+		 		"GROUP BY saleitem.Sale_Code, inventory.item_barcode\r\n" + 
+		 		"HAVING \r\n" + 
+		 		"    COUNT(*) >= 1");
+		ArrayList<String[]> solditems = new ArrayList<String[]>();
+		Float priceTotal = (float) 0;
         while (SaleItemSet.next()) 
     	{
-     	  String Barcode = (SaleItemSet.getString("item_barcode")); 
-     	  int Quantities = (SaleItemSet.getInt("item_quantity"));
-     	   double PricePerItem = (SaleItemSet.getDouble("item_price"));
-     	   String Sale_id = (SaleItemSet.getString("Sale_Code"));
-     	   Sale newSale = new Sale(Sale_id, Barcode , Quantities, PricePerItem);
-     	   solditems.add(newSale);
+     	  String name = (SaleItemSet.getString("item_desc")); 
+     	  Integer count = (SaleItemSet.getInt("COUNT(*)"));
+     	  Float priceper = (SaleItemSet.getFloat("item_price"));
+     	  Float priceAll = count*priceper;
+     	  priceTotal += priceAll;
+    	  String stock = (SaleItemSet.getString("item_quantity"));
+    	  String category = (SaleItemSet.getString("item_category")); 
+    	  String[] newItem = {name, count.toString(), priceAll+" = "+count+"x("+priceper+")", stock,category};
+     	  solditems.add(newItem);
     	}
-		 return solditems;
-		
+        String[] fullTotal = {"","Total:","$"+priceTotal.toString(),"",""};
+   	  	solditems.add(fullTotal);
+		return solditems;	
 	}
 	 public ArrayList<Sale> RetrieveSalesRecord(ArrayList<Sale> ListofSales) throws Exception 
 	 {
 		 try {
             Class.forName("com.mysql.jdbc.Driver");
-           connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?", Login.USRN, Login.USRP);
+           connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?useSSL=false", Login.USRN, Login.USRP);
            statement = connect.createStatement();
            // Result set receives the results of the SQL query
-           SaleRecordSet = statement.executeQuery("select * from "+Login.Database+".salerecord");
+           SaleRecordSet = statement.executeQuery("select Sale_Code, Staff_Code, Sale_Time from "+Login.Database+".salerecord ORDER BY Sale_Time ASC");
            
            //ArrayList<String> RecordId = new ArrayList<String>();
            //ArrayList<String> StaffId = new ArrayList<String>();
            //ArrayList<LocalDateTime> DateTimeofSale = new ArrayList<LocalDateTime>();
            String RecordId;
            String StaffId;
-           LocalDateTime DateTimeofSale;
+           String DateTimeofSale;
+
            int RecordCount = 0;
            
            while(SaleRecordSet.next())
@@ -208,7 +219,10 @@ public class SalesDB
            	RecordId=(SaleRecordSet.getString("Sale_Code"));
            	//RecordId.add(RecordCount, SaleRecordSet.getString("Sale_Code"));
            	StaffId=(SaleRecordSet.getString("Staff_Code"));
-           	DateTimeofSale=(SaleRecordSet.getObject("Sale_Time", LocalDateTime.class));
+           	DateTimeofSale=(SaleRecordSet.getTimestamp("Sale_Time")).toString();
+           	DateTimeofSale = DateTimeofSale.substring(0, Math.min(DateTimeofSale.length(), DateTimeofSale.length()-2));
+           	//DateInput = DateTimeofSale.replaceAll("-","/");
+           	//System.out.println(DateTimeofSale);
            	Sale newrecord = new Sale(RecordId, StaffId, DateTimeofSale);
            	//Sale newSale = new Sale(StaffId[RecordCount], "noName" , StaffId[RecordCount], 10, DateTimeofSale[RecordCount]);
            	ListofSales.add(newrecord);

@@ -56,7 +56,7 @@ public class Inventory
 		boolean testConnSuccess = true;
 	
 		try {
-			testConn = DriverManager.getConnection("jdbc:mysql://localhost/"+Database+"?", Login.USRN, Login.USRP);
+			testConn = DriverManager.getConnection("jdbc:mysql://localhost/"+Database+"?useSSL=false", Login.USRN, Login.USRP);
 			testConn.close();
 		}
 		catch (SQLException ex)
@@ -177,7 +177,7 @@ public class Inventory
 	{	/// Adds an Item to inventory Specifying all values///
 	try {
 		// Setup the connection with the DB//
-		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?", Login.USRN, Login.USRP);
+		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?useSSL=false", Login.USRN, Login.USRP);
 		// Statements allow SQL queries to the database
 		statement = connect.createStatement();
 		String sql = "UPDATE inventory  SET item_desc = ('" + Name + "')  WHERE item_barcode = ('"+ Barcode +"')";
@@ -191,7 +191,7 @@ public class Inventory
 	{	/// Adds an Item to inventory Specifying all values///
 	try {
 		// Setup the connection with the DB//
-		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?", Login.USRN, Login.USRP);
+		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?useSSL=false", Login.USRN, Login.USRP);
 		// Statements allow SQL queries to the database
 		statement = connect.createStatement();
 		String sql = "UPDATE inventory  SET item_barcode = ('" + Barcode + "')  WHERE item_desc = ('"+ Name +"')";
@@ -205,7 +205,7 @@ public class Inventory
 	{	/// Adds an Item to inventory Specifying all values///
 	try {
 		// Setup the connection with the DB//
-		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?", Login.USRN, Login.USRP);
+		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?useSSL=false", Login.USRN, Login.USRP);
 		// Statements allow SQL queries to the database
 		statement = connect.createStatement();
 		String sql = "UPDATE inventory  SET item_quantity = ('" + Amount + "')  WHERE item_barcode = ('"+ Barcode +"')";
@@ -219,7 +219,7 @@ public class Inventory
 	{	/// Adds an Item to inventory Specifying all values///
 	try {
 		// Setup the connection with the DB//
-		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?", Login.USRN, Login.USRP);
+		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?useSSL=false", Login.USRN, Login.USRP);
 		// Statements allow SQL queries to the database
 		statement = connect.createStatement();
 		String sql = "UPDATE inventory  SET minimum_stock = ('" + Amount + "')  WHERE item_barcode = ('"+ Barcode +"')";
@@ -233,7 +233,7 @@ public class Inventory
 	{	/// Adds an Item to inventory Specifying all values///
 	try {
 		// Setup the connection with the DB//
-		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?", Login.USRN, Login.USRP);
+		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?useSSL=false", Login.USRN, Login.USRP);
 		// Statements allow SQL queries to the database
 		statement = connect.createStatement();
 		String sql = "UPDATE inventory  SET item_price = ('" + Price + "')  WHERE item_barcode = ('"+ Barcode +"')";
@@ -247,7 +247,7 @@ public class Inventory
 	{	/// Adds an Item to inventory Specifying all values///
 	try {
 		// Setup the connection with the DB//
-		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?", Login.USRN, Login.USRP);
+		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?useSSL=false", Login.USRN, Login.USRP);
 		// Statements allow SQL queries to the database
 		statement = connect.createStatement();
 		String sql = "UPDATE inventory  SET item_category = ('" + Category + "')  WHERE item_barcode = ('"+ Barcode +"')";
@@ -261,7 +261,7 @@ public class Inventory
 	{	/// Adds an Item to inventory Specifying all values///
 	try {
 		// Setup the connection with the DB//
-		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?", Login.USRN, Login.USRP);
+		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?useSSL=false", Login.USRN, Login.USRP);
 		// Statements allow SQL queries to the database
 		statement = connect.createStatement();
 		String sql = "UPDATE inventory  SET item_obsolete = ('" + Obsolescence + "')  WHERE item_barcode = ('"+ Barcode +"')";
@@ -275,7 +275,7 @@ public class Inventory
 	{	/// Adds an Item to inventory Specifying all values///
 	try {
 		// Setup the connection with the DB//
-		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?", Login.USRN, Login.USRP);
+		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?useSSL=false", Login.USRN, Login.USRP);
 		// Statements allow SQL queries to the database
 		statement = connect.createStatement();
 		String sql = "UPDATE inventory  SET item_quantity = item_quantity-1  WHERE item_barcode = ('"+ Barcode +"')";
@@ -289,7 +289,7 @@ public class Inventory
 	{
 		try {
 			// Setup the connection with the DB//
-			connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?", Login.USRN, Login.USRP);
+			connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?useSSL=false", Login.USRN, Login.USRP);
 			// Statements allow SQL queries to the database
 			statement = connect.createStatement();
 			String sql = "UPDATE inventory  SET item_quantity = item_quantity-"+Reduction+"  WHERE item_barcode = ('"+ Barcode +"')";
@@ -302,7 +302,7 @@ public class Inventory
 	{	/// Adds an Item to inventory Specifying all values///
 	try {
 		// Setup the connection with the DB//
-		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?", Login.USRN, Login.USRP);
+		connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?useSSL=false", Login.USRN, Login.USRP);
 		// Statements allow SQL queries to the database
 		statement = connect.createStatement();
 		String sql = "UPDATE inventory  SET item_quantity = item_quantity+1  WHERE item_barcode = ('"+ Barcode +"')";
@@ -316,7 +316,7 @@ public class Inventory
 	{
 		try {
 			// Setup the connection with the DB//
-			connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?", Login.USRN, Login.USRP);
+			connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?useSSL=false", Login.USRN, Login.USRP);
 			// Statements allow SQL queries to the database
 			statement = connect.createStatement();
 			String sql = "UPDATE inventory  SET item_quantity = item_quantity+"+Addition+"  WHERE item_barcode = ('"+ Barcode +"')";
@@ -330,7 +330,7 @@ public class Inventory
 		{	/// Adds an Item to inventory Specifying all values///
 		try {
 			// Setup the connection with the DB//
-			connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?", Login.USRN, Login.USRP);
+			connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?useSSL=false", Login.USRN, Login.USRP);
 			// Statements allow SQL queries to the database
 			statement = connect.createStatement();
 			String sql = "UPDATE inventory  SET minimum_stock = ('" + Minimum + "')  WHERE item_barcode = ('"+ Barcode +"')";
@@ -356,7 +356,7 @@ public class Inventory
 	{	// Deletes all Items from database that have a matching Barcode Identifier
 		 try 
 		 {
-			 connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?", Login.USRN, Login.USRP);
+			 connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?useSSL=false", Login.USRN, Login.USRP);
 			 statement = connect.createStatement();
 			 String sql = "DELETE FROM inventory WHERE item_barcode = ('"+ Barcode + "')";
 	         statement.executeUpdate(sql);
@@ -369,7 +369,7 @@ public class Inventory
 	 {	//Deletes all database entries that have a matching name -- Use with Caution, 
 		 try 
 		 {
-			 connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?", Login.USRN, Login.USRP); 
+			 connect = DriverManager.getConnection("jdbc:mysql://localhost/"+ Login.Database +"?useSSL=false", Login.USRN, Login.USRP); 
 			 statement = connect.createStatement();
 			 String sql = "DELETE FROM inventory WHERE item_desc = ('"+ Name + "')";
 	         statement.executeUpdate(sql);
@@ -403,7 +403,7 @@ public class Inventory
 		 
 	        try {
 	             Class.forName("com.mysql.jdbc.Driver");
-	            connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?", Login.USRN, Login.USRP);
+	            connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?useSSL=false", Login.USRN, Login.USRP);
 	            statement = connect.createStatement();
 	            // Result set receives the results of the SQL query
 	            resultSet = statement.executeQuery("select * from "+Login.Database+".inventory");
@@ -473,7 +473,6 @@ public class Inventory
 	            //System.out.println("Date: " + date);
 	            
 	        }
-	        System.out.println("End of printout\n");
 			return menu2;
 	    }
 	
@@ -486,7 +485,7 @@ public class Inventory
 		  try 
 		  {
 	            Class.forName("com.mysql.jdbc.Driver");
-	            connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?", Login.USRN, Login.USRP);
+	            connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?useSSL=false", Login.USRN, Login.USRP);
 	            statement = connect.createStatement();
 	            // Result set receives the results of the SQL query
 	            resultSet = statement.executeQuery("select * from "+Login.Database+".inventory");

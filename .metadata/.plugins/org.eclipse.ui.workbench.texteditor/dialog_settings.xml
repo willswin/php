@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
-		<item key="selection" value="GridBag"/>
+		<item key="selection" value="justify"/>
 		<item key="wrap" value="true"/>
 		<item key="casesensitive" value="false"/>
 		<item key="wholeword" value="false"/>
 		<item key="incremental" value="false"/>
 		<item key="isRegEx" value="false"/>
 		<list key="findhistory">
-			<item value="gridbag"/>
-			<item value="layout"/>
-			<item value="scroll"/>
-			<item value="parse"/>
-			<item value="cuddly"/>
-			<item value="sentToBank"/>
-			<item value="discount"/>
-			<item value="table"/>
-			<item value="prefer"/>
-			<item value="constrain"/>
-			<item value="gridlayout"/>
-			<item value="viewer"/>
-			<item value="viwer"/>
-			<item value="border"/>
-			<item value="CENTER"/>
+			<item value="justify"/>
+			<item value="solditems"/>
+			<item value="Retrieve"/>
+			<item value="&#x09;&#x09;Listitemsold.RetrieveSoldItems(solditems);"/>
+			<item value="quantity"/>
+			<item value="item_quantity"/>
+			<item value="quanitity"/>
+			<item value="getPast"/>
+			<item value="itemsInOrder2"/>
+			<item value="theItemColum"/>
+			<item value="sale"/>
+			<item value="sql server"/>
+			<item value="warning"/>
+			<item value="WARNING"/>
+			<item value="sql"/>
 		</list>
 		<list key="replacehistory">
 			<item value="currentOrderViewer"/>
