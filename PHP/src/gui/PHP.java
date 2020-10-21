@@ -19,9 +19,10 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.io.File;
-
+import java.text.DateFormatSymbols;
 import java.text.NumberFormat;
-
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.awt.GridLayout;
 public class PHP extends JPanel {
 	private Map<String, Order> allOrders;
@@ -68,11 +69,6 @@ public class PHP extends JPanel {
 		
 
 		ArrayList<StockItem> theMenu = OH.getMenu();
-		String[] menuTable = new String[theMenu.size()];
-		for (int i = 0; i < theMenu.size(); i++) {
-			menuTable[i] = theMenu.get(i).getName();
-		}
-		
 		
 		//preparing the first page's panels
 
@@ -125,30 +121,48 @@ public class PHP extends JPanel {
 		button.addActionListener(new java.awt.event.ActionListener() {
 			@Override
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				int itm = JOptionPane.showOptionDialog(OrdersPage, "Add Item", "Menu", JOptionPane.DEFAULT_OPTION,
-						JOptionPane.INFORMATION_MESSAGE, null, menuTable, menuTable[0]);
-				int theCount = 0;
-				int option = JOptionPane.showOptionDialog(null, spinner, "Enter Item Count",
-						JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
-				if (option == JOptionPane.CANCEL_OPTION) {
-					// user hit cancel
-				} else if (option == JOptionPane.OK_OPTION) {
-					theCount = (Integer) spinner.getValue();
-				}
-
-				StockItem chosen = null;
-				for (int z = 0; z < theMenu.size(); z++) {
-					if (theMenu.get(z).getName() == menuTable[itm]) {
-						chosen = theMenu.get(z);
+				
+				String[] categories = {"A", "B", "C", "D", "E", "F", "G", "H", "I", 
+	    				  "J","K", "L","M","N","O","P","Q","R","S","T",
+	    				  "U","V", "W", "X", "Y","Z"};
+				
+				int cata = JOptionPane.showOptionDialog(OrdersPage, String.format( "%-30s %-49s %-40s %-30s %-5s\n "
+						+ "															%-28s %-40s %-39s %-31s %-5s\n "
+						+ "															%-69s %-40s %-5s" ,"A: First Aid", "B: Over the Counter", "C: Hygiene", "D: Skincare", "E: Menstrual", "F: Beauty", "G: Consumables (Food/Bev)", "H: Seasonal", "I: Cleaning", "J: Diet and Nutrition", "K: Vitamins, Minerals and Supplements", "L: Makeup", "M: Dental"), "Menu", JOptionPane.DEFAULT_OPTION,
+						JOptionPane.INFORMATION_MESSAGE, null, categories, categories[0]);
+				
+				try {
+					String[] tTable = DataBaseHandler.getCategory(categories[cata]);
+					int itm = JOptionPane.showOptionDialog(OrdersPage, "Add Item", "Menu", JOptionPane.DEFAULT_OPTION,
+							JOptionPane.INFORMATION_MESSAGE, null, tTable, tTable[0]);
+					int theCount = 0;
+					int option = JOptionPane.showOptionDialog(null, spinner, "Enter Item Count",
+							JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+					if (option == JOptionPane.CANCEL_OPTION) {
+						// user hit cancel
+					} else if (option == JOptionPane.OK_OPTION) {
+						theCount = (Integer) spinner.getValue();
 					}
-				}
-				if (currentOrderID != "default") {
-					for (int i = 0; i < theCount; i++) {
-						OH.addItemToOrder(currentOrderID, chosen);
-					}
 
-					System.out.println("adding: " + chosen.getName() + " to " + currentOrderID);
+					StockItem chosen = null;
+					for (int z = 0; z < theMenu.size(); z++) {
+						if (theMenu.get(z).getName().equals(tTable[itm])) {
+							chosen = theMenu.get(z);
+						}
+					}
+					if (currentOrderID != "default") {
+						for (int i = 0; i < theCount; i++) {
+							OH.addItemToOrder(currentOrderID, chosen);
+						}
+
+						System.out.println("adding: " + chosen.getName() + " to " + currentOrderID);
+					}
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
+				
+				
 
 				// frame.add(new CuddlyWombat(), BorderLayout.CENTER);
 				PHP CW = new PHP();
@@ -328,6 +342,7 @@ public class PHP extends JPanel {
 		invSelectModel = inventoryOutput.getSelectionModel();			
 	    invSelectModel.addListSelectionListener(new InventoryListSelectionHandler());
 		JScrollPane inventoryScroll = new JScrollPane(inventoryOutput, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		inventoryScroll.setPreferredSize(new Dimension(400, 700));
 		inventoryScroll.setBounds(7, 7, 400, 800);
 		invRightpanel.add(inventoryScroll);
 		inventoryPane.add(invView);
@@ -557,9 +572,6 @@ public class PHP extends JPanel {
 		
 		saleLeftpanel.setLayout(new GridLayout(3, 1, 20, 20));		
 		
-		JButton editButton = new JButton("Edit Sale");
-		saleLeftpanel.add(editButton);
-		
 		JButton reportWButton = new JButton("Weekly Report");
 		saleLeftpanel.add(reportWButton);	
 		
@@ -594,6 +606,51 @@ public class PHP extends JPanel {
 		salePreviewpanel.add(reviewOrderPane);
 
 			
+		reportWButton.addActionListener(new java.awt.event.ActionListener() {
+			@Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+							    
+			    Calendar cal = Calendar.getInstance();
+			    cal.set(Calendar.DAY_OF_WEEK,
+			    cal.getActualMinimum(Calendar.DAY_OF_WEEK));
+			    Date firstDayOfTheWeek = cal.getTime();
+
+			    SpinnerModel model = new StepperSpinnerDateModel(firstDayOfTheWeek, null, null,Calendar.DAY_OF_WEEK, 7);
+			    JSpinner qspinner = new JSpinner(model);
+
+		        JPanel panel = new JPanel(new GridLayout(0, 1));
+		        panel.add(new JLabel("Week Starting Sunday: "));
+		        panel.add(qspinner);
+				
+		        
+		        int result = JOptionPane.showConfirmDialog(null, panel, "Weekly Report",
+			            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+			        
+			        if (result == JOptionPane.OK_OPTION) {
+				        Date theWeek = (Date) qspinner.getValue();
+				        LocalDate theWeekLD = theWeek.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+			            
+						try {
+							new WeeklyReport(frame, theWeekLD.toString());
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+			            
+			        }else
+			        {
+			            System.out.println("Cancelled");
+			        }
+		        
+		        
+				lastPage = 2;
+				OH.removeOrder(currentOrderID);
+				currentOrderID = "default";
+				PHP CW = new PHP();
+				frame.setContentPane(CW);	
+			}
+		});
+		
 		reportMButton.addActionListener(new java.awt.event.ActionListener() {
 			@Override
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -621,7 +678,7 @@ public class PHP extends JPanel {
 		        panel.add(qspinner);
 				
 		        
-		        int result = JOptionPane.showConfirmDialog(null, panel, "Test",
+		        int result = JOptionPane.showConfirmDialog(null, panel, "Monthly Report",
 			            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 			        
 			        if (result == JOptionPane.OK_OPTION) {
@@ -650,7 +707,6 @@ public class PHP extends JPanel {
 				frame.setContentPane(CW);	
 			}
 		});
-		
 		
 		salesRecords.add(saleView);
 

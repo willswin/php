@@ -397,6 +397,46 @@ public class Inventory
 *////////////////////////////////////////////////////////////////////////////////////////	
 	
 //1	
+	public ArrayList<StockItem> getCataDB(String cata) throws Exception 
+ 	{
+        ArrayList<StockItem> ofCata = new ArrayList<StockItem>();
+        try {
+             Class.forName("com.mysql.jdbc.Driver");
+            connect = DriverManager.getConnection("jdbc:mysql://localhost/"+Login.Database+"?useSSL=false", Login.USRN, Login.USRP);
+            statement = connect.createStatement();
+            resultSet = statement.executeQuery("SELECT *\r\n" + 
+            		"FROM dp2pharm.inventory\r\n" + 
+            		"WHERE inventory.item_category = '"+cata+"'");
+            while (resultSet.next()) 
+        	{
+	        	boolean Discontinued = false;
+	            int ItemKey = resultSet.getInt("item_barcode");
+	            String ItemName = resultSet.getString("item_desc");
+	            int ItemQuantity = resultSet.getInt("item_quantity");
+	            double ItemPrice = resultSet.getDouble("item_price");
+	            String ItemCategory = resultSet.getString("item_category");
+	            int ItemObsolete = resultSet.getInt("item_obsolete");
+	            int ItemMinimum = resultSet.getInt("minimum_stock");
+	            
+	            if(ItemObsolete == 1)
+	            {
+	            Discontinued = true;
+	            }
+	            else {}
+	            String menuID = Integer.toString(ItemKey);
+	            StockItem StockItem = new StockItem(ItemName, (float) ItemPrice, menuID, ItemQuantity, ItemCategory, Discontinued, ItemMinimum);
+	            if (Discontinued == false && ItemCategory.contentEquals(cata))
+	            {
+		            ofCata.add(StockItem);
+	            }
+	        	}      
+	        }
+        catch (Exception e) { throw e; }    
+        finally 
+        	{ 	    	close();	     	}       
+        return ofCata;
+	 }
+	
 	public ArrayList<StockItem> ReadDB(ArrayList<StockItem> menu) throws Exception 
 	 	{
 		 

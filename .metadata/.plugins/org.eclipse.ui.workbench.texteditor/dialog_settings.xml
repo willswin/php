@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
-		<item key="selection" value="justify"/>
+		<item key="selection" value="Edit Sale"/>
 		<item key="wrap" value="true"/>
 		<item key="casesensitive" value="false"/>
 		<item key="wholeword" value="false"/>
 		<item key="incremental" value="false"/>
 		<item key="isRegEx" value="false"/>
 		<list key="findhistory">
-			<item value="justify"/>
-			<item value="solditems"/>
-			<item value="Retrieve"/>
-			<item value="&#x09;&#x09;Listitemsold.RetrieveSoldItems(solditems);"/>
-			<item value="quantity"/>
-			<item value="item_quantity"/>
-			<item value="quanitity"/>
-			<item value="getPast"/>
-			<item value="itemsInOrder2"/>
-			<item value="theItemColum"/>
-			<item value="sale"/>
-			<item value="sql server"/>
-			<item value="warning"/>
-			<item value="WARNING"/>
-			<item value="sql"/>
+			<item value="edit sale"/>
+			<item value="scroll"/>
+			<item value="orderspage"/>
+			<item value="menuTable"/>
+			<item value="OH"/>
+			<item value="edit"/>
+			<item value="custom"/>
+			<item value="CustomSpinnerModel"/>
+			<item value="customspinner"/>
+			<item value="test"/>
+			<item value="please check"/>
+			<item value="write"/>
+			<item value="DriverManager"/>
+			<item value="database"/>
+			<item value="th"/>
 		</list>
 		<list key="replacehistory">
 			<item value="currentOrderViewer"/>
